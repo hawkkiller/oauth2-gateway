@@ -24,7 +24,7 @@ services:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
       - LOG_LEVEL=info
       - SERVE_PUBLIC_BASE_URL=http://127.0.0.1:4433/
-      - SERVE_ADMIN_BASE_URL=http://kratos:4434/
+      - SERVE_ADMIN_BASE_URL=http://127.0.0.1:4434/
       - COURIER_SMTP_CONNECTION_URI=${KRATOS_SMTP_CONNECTION_URI}
       - COURIER_SMTP_FROM_ADDRESS=${KRATOS_SMTP_FROM_ADDRESS}
     volumes:

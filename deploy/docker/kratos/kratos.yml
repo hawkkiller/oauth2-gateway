@@ -68,3 +68,6 @@ courier:
     # from_address is supplied from ENV
     from_name: Learny
     local_name: learny
+
+oauth2_provider:
+  url: http://localhost:4445

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  LoginFlow,
+  RegistrationFlow,
   UiNodeInputAttributes,
   UiNodeTypeEnum,
 } from "@ory/kratos-client";
@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export default function LoginWithCodePage() {
+export default function RegistrationWithCodePage() {
   // Router and params
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +33,7 @@ export default function LoginWithCodePage() {
   // State management
   const [email, setEmail] = useState("");
   const [flowState, setFlowState] = useState<{
-    flow: LoginFlow | null;
+    flow: RegistrationFlow | null;
     isLoading: boolean;
     error: string | null;
   }>({
@@ -52,20 +52,20 @@ export default function LoginWithCodePage() {
   });
 
 
-  // Fetch the login flow on mount
+  // Fetch the registration flow on mount
   useEffect(() => {
     if (!loginChallenge) return;
 
     const fetchFlow = async () => {
       try {
-        const res = await fetch("/api/login/flow");
+        const res = await fetch("/api/registration/flow");
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to fetch login flow");
+          throw new Error(errorData.message || "Failed to fetch registration flow");
         }
 
-        const data = (await res.json()) as LoginFlow;
+        const data = (await res.json()) as RegistrationFlow;
 
         setFlowState({
           flow: data,
@@ -76,7 +76,7 @@ export default function LoginWithCodePage() {
         setFlowState({
           flow: null,
           isLoading: false,
-          error: err.message || "Error fetching login flow",
+          error: err.message || "Error fetching registration flow",
         });
       }
     };
@@ -84,7 +84,7 @@ export default function LoginWithCodePage() {
     fetchFlow();
   }, [loginChallenge]);
 
-  // Handle form submission to get login code
+  // Handle form submission to get registration code
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -100,7 +100,7 @@ export default function LoginWithCodePage() {
       setSubmitState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: "Login flow not found",
+        error: "Registration flow not found",
       }));
       return;
     }
@@ -119,8 +119,8 @@ export default function LoginWithCodePage() {
 
       const csrfToken = (csrfNode.attributes as UiNodeInputAttributes).value;
 
-      // Request login code
-      const res = await fetch(`/api/login/code?flow=${flowState.flow.id}&login_challenge=${loginChallenge}`, {
+      // Request registration code
+      const res = await fetch(`/api/registration/code?flow=${flowState.flow.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, csrf_token: csrfToken }),
@@ -128,7 +128,7 @@ export default function LoginWithCodePage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to send login code");
+        throw new Error(errorData.message || "Failed to send registration code");
       }
 
       // Store email for the code verification page
@@ -147,9 +147,8 @@ export default function LoginWithCodePage() {
         error: null,
       }));
 
-      console.log("Redirecting");
       router.replace(
-        `/login/code?flow=${
+        `/registration/code?flow=${
           flowState.flow!.id
         }&login_challenge=${loginChallenge}`
       );
@@ -158,7 +157,7 @@ export default function LoginWithCodePage() {
       setSubmitState({
         isSubmitting: false,
         isRedirecting: false,
-        error: err.message || "Authentication failed",
+        error: err.message || "Registration failed",
       });
     }
   };
@@ -186,7 +185,7 @@ export default function LoginWithCodePage() {
                 No login challenge was provided.
               </p>
               <p className="pb-4">
-                Please start the login process from your application.
+                Please start the registration process from your application.
               </p>
             </div>
           </CardContent>
@@ -198,31 +197,32 @@ export default function LoginWithCodePage() {
   // Loading state while fetching flow
   if (flowState.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-md shadow-lg border-0 py-8">
-          <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-            <p className="text-slate-600">Loading login form...</p>
-          </CardContent>
-        </Card>
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 animate-spin text-gray-500" />
       </div>
     );
   }
 
-  // Error state if flow fetch failed
+  // Show error if flow fetching failed
   if (flowState.error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Login Error</CardTitle>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">
+              <AlertCircle className="inline-block mr-2 h-6 w-6" />
+              Error
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert variant="destructive">
+          <CardContent>
+            <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{flowState.error}</AlertDescription>
             </Alert>
-            <Button className="w-full" onClick={() => window.location.reload()}>
+            <Button
+              className="w-full"
+              onClick={() => router.refresh()}
+            >
               Try Again
             </Button>
           </CardContent>
@@ -231,78 +231,56 @@ export default function LoginWithCodePage() {
     );
   }
 
-  // Main form
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center font-bold">
-            Login with Code
+          <CardTitle className="text-2xl text-center">
+            Create an Account
           </CardTitle>
-          <CardDescription className="text-center text-slate-500">
-            Enter your email to receive a login code
+          <CardDescription className="text-center">
+            Enter your email to receive a verification code
           </CardDescription>
         </CardHeader>
-
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Email
-              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <Input
-                  type="email"
+                  className="pl-10 h-12"
                   id="email"
-                  name="email"
-                  required
-                  placeholder="you@example.com"
-                  className="pl-10 text-slate-900 bg-white border-slate-200"
+                  placeholder="Email"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={
-                    submitState.isSubmitting || submitState.isRedirecting
-                  }
-                  aria-invalid={!!submitState.error}
-                  aria-describedby={
-                    submitState.error ? "email-error" : undefined
-                  }
+                  disabled={submitState.isSubmitting || submitState.isRedirecting}
+                  required
+                  autoComplete="email"
                 />
               </div>
             </div>
 
             {submitState.error && (
-              <div
-                id="email-error"
-                className="text-red-600 text-sm flex items-center gap-1 p-2 bg-red-50 rounded"
-                role="alert"
-              >
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{submitState.error}</span>
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{submitState.error}</AlertDescription>
+              </Alert>
             )}
-          </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full font-medium h-11"
+              className="w-full h-11 font-medium"
               disabled={
                 submitState.isSubmitting ||
                 submitState.isRedirecting ||
-                !email ||
-                !email.includes("@")
+                !email
               }
-              aria-busy={submitState.isSubmitting}
             >
               {submitState.isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  Sending code...
                 </>
               ) : submitState.isRedirecting ? (
                 <>
@@ -311,58 +289,42 @@ export default function LoginWithCodePage() {
                 </>
               ) : (
                 <>
-                  Send Code
+                  Continue with Email
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
 
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-slate-500">
-                  Or continue with
-                </span>
-              </div>
+            <div className="relative flex items-center">
+              <div className="flex-1 border-t border-gray-200"></div>
+              <div className="px-4 text-sm text-gray-500">or</div>
+              <div className="flex-1 border-t border-gray-200"></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
-                disabled
-              >
-                <GoogleIcon />
-                <span className="ml-2">Google</span>
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="outline" className="h-11">
+                <GoogleIcon className="mr-2 h-5 w-5" />
+                Google
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
-                disabled
-              >
-                <AppleIcon />
-                <span className="ml-2">Apple</span>
+              <Button variant="outline" className="h-11">
+                <AppleIcon className="mr-2 h-5 w-5" />
+                Apple
               </Button>
             </div>
-
-            <div className="text-center text-sm">
-              <div className="text-gray-600">
-                Don't have an account?{" "}
-                <Link
-                  href={`/registration?login_challenge=${loginChallenge}`}
-                  className="font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  Sign up
-                </Link>
-              </div>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-2 text-center text-sm">
+            <div className="text-gray-600">
+              Already have an account?{" "}
+              <Link
+                href={`/login?login_challenge=${loginChallenge}`}
+                className="font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Log in
+              </Link>
             </div>
           </CardFooter>
         </form>
       </Card>
     </div>
   );
-}
+} 
