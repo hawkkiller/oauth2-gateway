@@ -1,0 +1,112 @@
+volumes:
+  kratos-data:
+  hydra-data:
+
+services:
+  kratos-migrate:
+    image: oryd/kratos:v1.3.1
+    command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+    volumes:
+      - kratos-data:/var/lib/sqlite
+      - ./kratos:/etc/config/kratos:ro
+    networks:
+      - intranet
+    restart: "no"
+
+  kratos:
+    image: oryd/kratos:v1.3.1
+    depends_on:
+      - kratos-migrate
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - LOG_LEVEL=info
+      - SERVE_PUBLIC_BASE_URL=http://127.0.0.1:4433/
+      - SERVE_ADMIN_BASE_URL=http://kratos:4434/
+      - COURIER_SMTP_CONNECTION_URI=${KRATOS_SMTP_CONNECTION_URI}
+      - COURIER_SMTP_FROM_ADDRESS=${KRATOS_SMTP_FROM_ADDRESS}
+    volumes:
+      - kratos-data:/var/lib/sqlite
+      - ./kratos:/etc/config/kratos:ro
+    ports:
+      - 4433:4433 # public
+      - 4434:4434 # admin
+    networks:
+      - intranet
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4433/health/ready"]
+      interval: 10s
+      retries: 5
+
+  hydra-sqlite:
+    image: busybox
+    volumes:
+      - hydra-data:/mnt/sqlite
+    command: "chmod -R 777 /mnt/sqlite"
+
+  hydra-migrate:
+    image: oryd/hydra:v2.3.0
+    command: migrate -c /etc/config/hydra/hydra.yml sql up -e --yes
+    environment:
+      - DSN=sqlite:///mnt/sqlite/db.sqlite?_fk=true&mode=rwc
+    volumes:
+      - hydra-data:/mnt/sqlite:rw
+      - ./hydra:/etc/config/hydra:ro
+    networks:
+      - intranet
+    depends_on:
+      - hydra-sqlite
+
+  hydra:
+    image: oryd/hydra:v2.3.0
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+      # - "5555:5555" # Port for hydra token user
+    command: serve -c /etc/config/hydra/hydra.yml all --dev
+    volumes:
+      - hydra-data:/mnt/sqlite:rw
+      - ./hydra:/etc/config/hydra:ro
+    environment:
+      - DSN=sqlite:///mnt/sqlite/db.sqlite?_fk=true&mode=rwc
+    restart: unless-stopped
+    depends_on:
+      - hydra-sqlite
+      - hydra-migrate
+    networks:
+      - intranet
+
+  # consent:
+  #   environment:
+  #     - HYDRA_ADMIN_URL=http://hydra:4445
+  #   image: oryd/hydra-login-consent-node:v2.3.0
+  #   ports:
+  #     - "5555:3000"
+  #   restart: unless-stopped
+  #   networks:
+  #     - intranet
+
+  # kratos-selfservice-ui-node:
+  #   image: oryd/kratos-selfservice-ui-node:v1.3.1
+  #   environment:
+  #     - KRATOS_PUBLIC_URL=http://kratos:4433/
+  #     - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+  #     - COOKIE_SECRET=changeme
+  #     - CSRF_COOKIE_NAME=ory_csrf_ui
+  #     - CSRF_COOKIE_SECRET=changeme
+  #   ports:
+  #     - 4455:3000
+  #   networks:
+  #     - intranet
+  #   restart: on-failure
+
+  oathkeeper:
+    image: oryd/oathkeeper:v0.40.9
+    command: serve proxy -c "/etc/config/oathkeeper/oathkeeper.yml"
+    restart: on-failure
+    networks:
+      - intranet
+    volumes:
+      - ./oathkeeper:/etc/config/oathkeeper
