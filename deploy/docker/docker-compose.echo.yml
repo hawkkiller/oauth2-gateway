@@ -1,0 +1,7 @@
+services:
+  echo:
+    image: mccutchen/go-httpbin
+    expose:
+      - "8080"
+    networks:
+      - intranet
