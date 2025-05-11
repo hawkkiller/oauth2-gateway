@@ -28,7 +28,6 @@ export default function LoginWithCodePage() {
   // Router and params
   const router = useRouter();
   const searchParams = useSearchParams();
-  const loginChallenge = searchParams.get("login_challenge");
 
   // State management
   const [email, setEmail] = useState("");
@@ -51,14 +50,11 @@ export default function LoginWithCodePage() {
     error: null,
   });
 
-
   // Fetch the login flow on mount
   useEffect(() => {
-    if (!loginChallenge) return;
-
     const fetchFlow = async () => {
       try {
-        const res = await fetch("/api/login/flow");
+        const res = await fetch(`/api/login/flow?id=${searchParams.get("flow")}`);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
@@ -82,7 +78,7 @@ export default function LoginWithCodePage() {
     };
 
     fetchFlow();
-  }, [loginChallenge]);
+  }, []);
 
   // Handle form submission to get login code
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -148,11 +144,7 @@ export default function LoginWithCodePage() {
       }));
 
       console.log("Redirecting");
-      router.replace(
-        `/login/code?flow=${
-          flowState.flow!.id
-        }&login_challenge=${loginChallenge}`
-      );
+      router.replace(`/login/code?flow=${flowState.flow!.id}`);
     } catch (err: any) {
       console.log("Error", err);
       setSubmitState({
@@ -162,38 +154,6 @@ export default function LoginWithCodePage() {
       });
     }
   };
-
-  // Show error if no login challenge is provided
-  if (!loginChallenge) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-md shadow-lg border-0">
-          <CardHeader className="border-b px-4 py-2">
-            <CardTitle className="text-2xl text-center w-full flex items-center justify-center gap-2">
-              <AlertCircle className="w-6 h-6" />
-              Missing Login Challenge
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 px-6">
-            <div className="text-center text-gray-700 space-y-4 flex flex-col items-center">
-              <div
-                className="text-5xl mb-4 flex justify-center"
-                aria-hidden="true"
-              >
-                🔒
-              </div>
-              <p className="text-lg font-medium">
-                No login challenge was provided.
-              </p>
-              <p className="pb-4">
-                Please start the login process from your application.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // Loading state while fetching flow
   if (flowState.isLoading) {
@@ -352,7 +312,7 @@ export default function LoginWithCodePage() {
             <div className="text-center text-sm">
               <span className="text-slate-600">Don't have an account?</span>{" "}
               <Link
-                href={`/register?login_challenge=${loginChallenge}`}
+                href={`/register`}
                 className="font-medium text-indigo-600 hover:text-indigo-800"
               >
                 Create an account

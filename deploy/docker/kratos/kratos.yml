@@ -12,6 +12,7 @@ selfservice:
   default_browser_return_url: http://127.0.0.1:5555/welcome
   allowed_return_urls:
     - http://127.0.0.1:5555
+    - http://127.0.0.1:5555/callback
   methods:
     code:
       passwordless_enabled: true

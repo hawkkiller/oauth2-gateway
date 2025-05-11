@@ -23,6 +23,7 @@ import {
   UiNodeInputAttributes,
   UiNodeTypeEnum,
 } from "@ory/kratos-client";
+import { kratosPublic } from "@/common/ory/ory";
 
 /**
  * OTP verification page component
@@ -42,8 +43,6 @@ export default function OTPSubmitPage() {
 
   // Get required parameters
   const flow = searchParams.get("flow");
-  const login_challenge = searchParams.get("login_challenge");
-  const email = sessionStorage.getItem("email");
 
   // Fetch login flow on component mount
   useEffect(() => {
@@ -63,13 +62,13 @@ export default function OTPSubmitPage() {
     };
 
     fetchFlow();
-  }, [flow]);
+  }, []);
 
   // Handle OTP verification submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!loginFlow) {
+    if (!loginFlow || !flow) {
       setError("Login flow not found");
       return;
     }
@@ -85,36 +84,35 @@ export default function OTPSubmitPage() {
           (node.attributes as UiNodeInputAttributes).name === "csrf_token"
       )?.attributes as UiNodeInputAttributes;
 
-      // Submit verification request
+      const email_attributes = loginFlow.ui.nodes.find(
+        (node) =>
+          node.type === UiNodeTypeEnum.Input &&
+          (node.attributes as UiNodeInputAttributes).name === "identifier"
+      )?.attributes as UiNodeInputAttributes;
+
       const res = await fetch(`/api/login/code/verify?flow=${flow}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code,
           csrf_token: csrf_attributes.value,
-          login_challenge,
-          email,
+          email: email_attributes.value,
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "Failed to verify code");
+      const { redirect_browser_to } = await res.json();
+
+      if (redirect_browser_to) {
+        window.location.href = redirect_browser_to;
       }
 
-      const data = await res.json();
-
-      // Handle successful verification with redirect
-      setRedirecting(true);
-      router.push(data.redirect_to || "/");
+      setError("Something went wrong");
     } catch (err: any) {
-      setError(err?.message || "Verification failed");
-      setLoading(false);
+      setError(err?.message || "Failed to verify code");
     }
   };
 
   // Show error page if required parameters are missing
-  if (!flow || !login_challenge || !email) {
+  if (!flow) {
     return <InvalidFlowError />;
   }
 
@@ -126,8 +124,7 @@ export default function OTPSubmitPage() {
             Verification Code
           </CardTitle>
           <CardDescription className="text-center">
-            Enter the 6-digit code sent to{" "}
-            <span className="font-medium">{email}</span>
+            Enter the 6-digit code sent to your email
           </CardDescription>
         </CardHeader>
 
@@ -179,9 +176,7 @@ export default function OTPSubmitPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() =>
-                    router.push(`/login?login_challenge=${login_challenge}`)
-                  }
+                  onClick={() => router.push(`/login`)}
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
                   disabled={loading || redirecting}
                 >
