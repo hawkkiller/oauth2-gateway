@@ -154,8 +154,11 @@ export default function LoginWithCodePage() {
         error: null,
       }));
 
-      console.log("Redirecting");
-      router.replace(`/login/code?flow=${flowState.flow!.id}`);
+      router.replace(
+        `/login/code?flow=${
+          flowState.flow!.id
+        }&login_challenge=${login_challenge}`
+      );
     } catch (err: any) {
       setSubmitState({
         isSubmitting: false,
@@ -199,6 +202,10 @@ export default function LoginWithCodePage() {
         </Card>
       </div>
     );
+  }
+
+  if (!login_challenge || !flowId) {
+    return <div>Invalid login challenge or flow ID</div>;
   }
 
   // Main form
