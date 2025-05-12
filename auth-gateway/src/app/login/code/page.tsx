@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,6 @@ import {
   UiNodeInputAttributes,
   UiNodeTypeEnum,
 } from "@ory/kratos-client";
-import { kratosPublic } from "@/common/ory/ory";
 
 /**
  * OTP verification page component

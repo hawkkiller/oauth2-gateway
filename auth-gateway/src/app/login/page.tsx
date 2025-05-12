@@ -127,14 +127,6 @@ export default function LoginWithCodePage() {
         throw new Error(errorData.message || "Failed to send login code");
       }
 
-      // Store email for the code verification page
-      try {
-        sessionStorage.setItem("email", email);
-      } catch (storageErr) {
-        console.error("Failed to store email in sessionStorage:", storageErr);
-        // Continue anyway as this is not critical
-      }
-
       // Set redirecting state and navigate
       setSubmitState((prev) => ({
         ...prev,
