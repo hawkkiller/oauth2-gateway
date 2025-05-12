@@ -23,6 +23,10 @@ import {
   UiNodeInputAttributes,
   UiNodeTypeEnum,
 } from "@ory/kratos-client";
+import {
+  findCsrfTokenInNodes,
+  findEmailInNodes,
+} from "@/common/ory/ui_nodes_helper";
 
 /**
  * OTP verification page component
@@ -39,17 +43,15 @@ export default function OTPSubmitPage() {
   // Router and params
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Get required parameters
-  const flow = searchParams.get("flow");
+  const flowId = searchParams.get("flow");
 
   // Fetch login flow on component mount
   useEffect(() => {
     const fetchFlow = async () => {
-      if (!flow) return;
+      if (!flowId) return;
 
       try {
-        const res = await fetch(`/api/login/flow?id=${flow}`);
+        const res = await fetch(`/api/login/flow?id=${flowId}`);
         if (!res.ok) {
           throw new Error("Failed to fetch login flow");
         }
@@ -67,7 +69,7 @@ export default function OTPSubmitPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!loginFlow || !flow) {
+    if (!loginFlow || !flowId) {
       setError("Login flow not found");
       return;
     }
@@ -77,24 +79,19 @@ export default function OTPSubmitPage() {
 
     try {
       // Find CSRF token from login flow
-      const csrf_attributes = loginFlow.ui.nodes.find(
-        (node) =>
-          node.type === UiNodeTypeEnum.Input &&
-          (node.attributes as UiNodeInputAttributes).name === "csrf_token"
-      )?.attributes as UiNodeInputAttributes;
+      const csrf_token = findCsrfTokenInNodes(loginFlow.ui.nodes);
+      const email = findEmailInNodes(loginFlow.ui.nodes);
 
-      const email_attributes = loginFlow.ui.nodes.find(
-        (node) =>
-          node.type === UiNodeTypeEnum.Input &&
-          (node.attributes as UiNodeInputAttributes).name === "identifier"
-      )?.attributes as UiNodeInputAttributes;
+      if (!csrf_token || !email) {
+        throw new Error("CSRF token or email not found");
+      }
 
-      const res = await fetch(`/api/login/code/verify?flow=${flow}`, {
+      const res = await fetch(`/api/login/code/verify?flow=${flowId}`, {
         method: "POST",
         body: JSON.stringify({
           code,
-          csrf_token: csrf_attributes.value,
-          email: email_attributes.value,
+          csrf_token,
+          email,
         }),
       });
 
@@ -106,12 +103,12 @@ export default function OTPSubmitPage() {
 
       setError("Something went wrong");
     } catch (err: any) {
-      setError(err?.message || "Failed to verify code");
+      setError(err?.message || "Failed to verify code. Please try again.");
     }
   };
 
   // Show error page if required parameters are missing
-  if (!flow) {
+  if (!flowId) {
     return <InvalidFlowError />;
   }
 

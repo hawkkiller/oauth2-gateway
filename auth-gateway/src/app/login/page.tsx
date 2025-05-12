@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import {
-  LoginFlow,
-  UiNodeInputAttributes,
-  UiNodeTypeEnum,
-} from "@ory/kratos-client";
+import { LoginFlow } from "@ory/kratos-client";
 import { AlertCircle, ArrowRight, Loader2, Mail } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import { findCsrfTokenInNodes } from "@/common/ory/ui_nodes_helper";
 import AppleIcon from "@/components/icons/apple-icon";
 import GoogleIcon from "@/components/icons/google-icon";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,12 +20,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoginWithCodePage() {
-  // Router and params
   const router = useRouter();
   const searchParams = useSearchParams();
+  const flowId = searchParams.get("flow");
+  const login_challenge = searchParams.get("login_challenge");
 
   // State management
   const [email, setEmail] = useState("");
@@ -40,6 +38,7 @@ export default function LoginWithCodePage() {
     isLoading: true,
     error: null,
   });
+
   const [submitState, setSubmitState] = useState<{
     isSubmitting: boolean;
     isRedirecting: boolean;
@@ -54,7 +53,33 @@ export default function LoginWithCodePage() {
   useEffect(() => {
     const fetchFlow = async () => {
       try {
-        const res = await fetch(`/api/login/flow?id=${searchParams.get("flow")}`);
+        // If no flow ID, create a new login flow
+        if (!flowId) {
+          const res = await fetch(`/api/login/flow`, {
+            method: "POST",
+            body: JSON.stringify({ login_challenge }),
+          });
+
+          if (!res.ok) {
+            throw new Error("Failed to fetch login flow");
+          }
+
+          const data = (await res.json()) as LoginFlow;
+
+          setFlowState({
+            flow: data,
+            isLoading: false,
+            error: null,
+          });
+
+          // Set the flow ID in the URL
+          router.replace(
+            `/login?flow=${data.id}&login_challenge=${login_challenge}`
+          );
+          return;
+        }
+
+        const res = await fetch(`/api/login/flow?id=${flowId}`);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
@@ -103,17 +128,11 @@ export default function LoginWithCodePage() {
 
     try {
       // Find CSRF token
-      const csrfNode = flowState.flow.ui.nodes.find(
-        (node) =>
-          node.type === UiNodeTypeEnum.Input &&
-          (node.attributes as UiNodeInputAttributes).name === "csrf_token"
-      );
+      const csrfToken = findCsrfTokenInNodes(flowState.flow.ui.nodes);
 
-      if (!csrfNode) {
+      if (!csrfToken) {
         throw new Error("CSRF token not found");
       }
-
-      const csrfToken = (csrfNode.attributes as UiNodeInputAttributes).value;
 
       // Request login code
       const res = await fetch(`/api/login/code?flow=${flowState.flow.id}`, {
@@ -138,7 +157,6 @@ export default function LoginWithCodePage() {
       console.log("Redirecting");
       router.replace(`/login/code?flow=${flowState.flow!.id}`);
     } catch (err: any) {
-      console.log("Error", err);
       setSubmitState({
         isSubmitting: false,
         isRedirecting: false,
