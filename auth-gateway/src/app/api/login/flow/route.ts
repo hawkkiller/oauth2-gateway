@@ -1,55 +1,31 @@
 import { kratosPublic } from "@/common/ory/ory";
+import { forwardSetCookieHeader } from "@/common/utils/forward-cookie";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * GET request handler for fetching login flow
+ * @param req - The incoming request object
+ * @param id - The flow ID, to create it use POST request
+ * @returns A JSON response containing the login flow data
+ */
 export async function GET(req: NextRequest) {
   const cookie = req.headers.get("cookie");
   const url = new URL(req.url);
   const flowId = url.searchParams.get("id");
 
+  if (!flowId) {
+    return NextResponse.json({ error: "No flow ID provided" }, { status: 400 });
+  }
+
   try {
-    // If an ID is provided, get an existing flow instead of creating a new one
-    if (flowId) {
-      const flow = await kratosPublic.getLoginFlow({
-        id: flowId,
-        cookie: cookie || undefined,
-      });
-
-      // Create a response with the flow data
-      const response = NextResponse.json(flow.data);
-
-      // Forward the Set-Cookie header from Kratos
-      if (flow.headers["set-cookie"]) {
-        const setCookie = flow.headers["set-cookie"];
-        if (Array.isArray(setCookie)) {
-          setCookie.forEach(cookie => response.headers.append("Set-Cookie", cookie));
-        } else {
-          response.headers.set("Set-Cookie", setCookie);
-        }
-      }
-
-      return response;
-    }
-
-    // Otherwise create a new flow
-    const flow = await kratosPublic.createBrowserLoginFlow({
-      // Forward the cookies from the user's request
+    const flow = await kratosPublic.getLoginFlow({
+      id: flowId,
       cookie: cookie || undefined,
-      // You can add return_to if needed
-      // returnTo: "https://your-app.com/after-login",
     });
 
     // Create a response with the flow data
     const response = NextResponse.json(flow.data);
-
-    // Forward the Set-Cookie header from Kratos
-    if (flow.headers["set-cookie"]) {
-      const setCookie = flow.headers["set-cookie"];
-      if (Array.isArray(setCookie)) {
-        setCookie.forEach(cookie => response.headers.append("Set-Cookie", cookie));
-      } else {
-        response.headers.set("Set-Cookie", setCookie);
-      }
-    }
+    forwardSetCookieHeader(flow.headers["set-cookie"], response);
 
     return response;
   } catch (error) {
@@ -59,4 +35,25 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * POST request handler for creating a login flow
+ * @param req - The incoming request object
+ * @param login_challenge - The login challenge
+ * @returns A JSON response containing the login flow data
+ */
+export async function POST(req: NextRequest) {
+  const cookie = req.headers.get("cookie");
+  const { login_challenge } = await req.json();
+
+  const flow = await kratosPublic.createBrowserLoginFlow({
+    cookie: cookie || undefined,
+    loginChallenge: login_challenge,
+  });
+
+  const response = NextResponse.json(flow.data);
+  forwardSetCookieHeader(flow.headers["set-cookie"], response);
+
+  return response;
 }

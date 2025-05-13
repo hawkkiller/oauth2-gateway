@@ -1,20 +1,20 @@
-import { hydraAdmin, kratosPublic } from "@/common/ory/ory";
+import { kratosPublic } from "@/common/ory/ory";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const url = new URL(request.url);
   const flow = url.searchParams.get("flow");
   try {
-    const { code, csrf_token, login_challenge: loginChallenge, email } = await request.json();
+    const { code, csrf_token, email } = await request.json();
 
-    if (!flow || !code || !csrf_token || !loginChallenge) {
+    if (!flow || !code || !csrf_token || !email) {
       return NextResponse.json(
         { message: "Missing required parameters" },
         { status: 400 }
       );
     }
 
-    const verifyRes = await kratosPublic.updateLoginFlow({
+    await kratosPublic.updateLoginFlow({
       flow,
       cookie: request.headers.get("cookie") || undefined,
       updateLoginFlowBody: {
@@ -25,21 +25,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const sessionData = verifyRes.data.session;
-
-    // Accept the login challenge with Hydra using the session token
-    const acceptRes = await hydraAdmin.acceptOAuth2LoginRequest({
-      loginChallenge,
-      acceptOAuth2LoginRequest: {
-        subject: sessionData.id,
-      },
-    });
-
-    return NextResponse.json({
-      message: "Login successful",
-      redirect_to: acceptRes.data.redirect_to,
-    });
+    return NextResponse.json(
+      { message: "Something went wrong" },
+      { status: 500 }
+    );
   } catch (error: any) {
+    const redirect_browser_to = error?.response?.data?.redirect_browser_to;
+    if (redirect_browser_to) {
+      return NextResponse.json({ redirect_browser_to });
+    }
+
     return NextResponse.json(
       { message: error.message || "Internal server error" },
       { status: 500 }
