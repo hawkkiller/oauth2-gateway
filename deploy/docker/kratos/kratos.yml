@@ -36,7 +36,7 @@ selfservice:
     registration:
       lifespan: 10m
       enabled: true
-      ui_url: http://127.0.0.1:5555/registration
+      ui_url: http://127.0.0.1:5555/signup
       after:
         code:
           hooks:

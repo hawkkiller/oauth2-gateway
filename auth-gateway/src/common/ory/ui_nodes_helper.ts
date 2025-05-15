@@ -16,7 +16,10 @@ export function findCsrfNodeInNodes(nodes: UiNode[]) {
 
 export function findEmailNodeInNodes(nodes: UiNode[]) {
   return findInputNodesInNodes(nodes).find(
-    (node) => (node.attributes as UiNodeInputAttributes).name === "identifier"
+    (node) => {
+      const name = (node.attributes as UiNodeInputAttributes).name;
+      return name === "identifier" || name === "traits.email";
+    }
   );
 }
 

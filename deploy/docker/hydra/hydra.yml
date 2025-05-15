@@ -6,8 +6,8 @@ urls:
   self:
     issuer: http://127.0.0.1:4444
   consent: http://127.0.0.1:5555/consent
-  login: http://127.0.0.1:5555/login
-  logout: http://127.0.0.1:5555/logout
+  login: http://127.0.0.1:4433/self-service/login/browser
+  logout: http://127.0.0.1:4433/self-service/logout/browser
 
 secrets:
   system:

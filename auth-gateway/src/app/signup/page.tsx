@@ -1,14 +1,12 @@
 "use client";
 
-import { LoginFlow } from "@ory/kratos-client";
+import { RegistrationFlow } from "@ory/kratos-client";
 import { AlertCircle, ArrowRight, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { findCsrfTokenInNodes } from "@/common/ory/ui_nodes_helper";
-import AppleIcon from "@/components/icons/apple-icon";
-import GoogleIcon from "@/components/icons/google-icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export default function LoginWithCodePage() {
+export default function SignupWithCodePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
@@ -30,7 +28,7 @@ export default function LoginWithCodePage() {
   // State management
   const [email, setEmail] = useState("");
   const [flowState, setFlowState] = useState<{
-    flow: LoginFlow | null;
+    flow: RegistrationFlow | null;
     isLoading: boolean;
     error: string | null;
   }>({
@@ -49,22 +47,22 @@ export default function LoginWithCodePage() {
     error: null,
   });
 
-  // Fetch the login flow on mount
+  // Fetch the signup flow on mount
   useEffect(() => {
     const fetchFlow = async () => {
       try {
-        // If no flow ID, create a new login flow
+        // If no flow ID, create a new signup flow
         if (!flowId) {
-          const res = await fetch(`/api/login/flow`, {
+          const res = await fetch(`/api/signup/flow`, {
             method: "POST",
             body: JSON.stringify({ login_challenge }),
           });
 
           if (!res.ok) {
-            throw new Error("Failed to fetch login flow");
+            throw new Error("Failed to fetch signup flow");
           }
 
-          const data = (await res.json()) as LoginFlow;
+          const data = (await res.json()) as RegistrationFlow;
 
           setFlowState({
             flow: data,
@@ -74,19 +72,19 @@ export default function LoginWithCodePage() {
 
           // Set the flow ID in the URL
           router.replace(
-            `/login?flow=${data.id}&login_challenge=${login_challenge}`
+            `/signup?flow=${data.id}&login_challenge=${login_challenge}`
           );
           return;
         }
 
-        const res = await fetch(`/api/login/flow?id=${flowId}`);
+        const res = await fetch(`/api/signup/flow?id=${flowId}`);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to fetch login flow");
+          throw new Error(errorData.message || "Failed to fetch signup flow");
         }
 
-        const data = (await res.json()) as LoginFlow;
+        const data = (await res.json()) as RegistrationFlow;
 
         setFlowState({
           flow: data,
@@ -97,7 +95,7 @@ export default function LoginWithCodePage() {
         setFlowState({
           flow: null,
           isLoading: false,
-          error: err.message || "Error fetching login flow",
+          error: err.message || "Error fetching signup flow",
         });
       }
     };
@@ -105,7 +103,7 @@ export default function LoginWithCodePage() {
     fetchFlow();
   }, []);
 
-  // Handle form submission to get login code
+  // Handle form submission to get signup code
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -121,7 +119,7 @@ export default function LoginWithCodePage() {
       setSubmitState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: "Login flow not found",
+        error: "Signup flow not found",
       }));
       return;
     }
@@ -134,8 +132,8 @@ export default function LoginWithCodePage() {
         throw new Error("CSRF token not found");
       }
 
-      // Request login code
-      const res = await fetch(`/api/login/code?flow=${flowState.flow.id}`, {
+      // Request signup code
+      const res = await fetch(`/api/signup/code?flow=${flowState.flow.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, csrf_token: csrfToken }),
@@ -143,7 +141,7 @@ export default function LoginWithCodePage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to send login code");
+        throw new Error(errorData.message || "Failed to send signup code");
       }
 
       // Set redirecting state and navigate
@@ -155,7 +153,7 @@ export default function LoginWithCodePage() {
       }));
 
       router.replace(
-        `/login/code?flow=${
+        `/signup/code?flow=${
           flowState.flow!.id
         }&login_challenge=${login_challenge}`
       );
@@ -163,7 +161,7 @@ export default function LoginWithCodePage() {
       setSubmitState({
         isSubmitting: false,
         isRedirecting: false,
-        error: err.message || "Authentication failed",
+        error: err.message || "Signup failed",
       });
     }
   };
@@ -175,7 +173,7 @@ export default function LoginWithCodePage() {
         <Card className="w-full max-w-md shadow-lg border-0 py-8">
           <CardContent className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-            <p className="text-slate-600">Loading login form...</p>
+            <p className="text-slate-600">Loading signup form...</p>
           </CardContent>
         </Card>
       </div>
@@ -188,7 +186,7 @@ export default function LoginWithCodePage() {
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md shadow-lg border-0">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Login Error</CardTitle>
+            <CardTitle className="text-2xl text-center">Signup Error</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert variant="destructive">
@@ -214,10 +212,10 @@ export default function LoginWithCodePage() {
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-bold">
-            Login with Code
+            Sign Up with Code
           </CardTitle>
           <CardDescription className="text-center text-slate-500">
-            Enter your email to receive a login code
+            Enter your email to receive a signup code
           </CardDescription>
         </CardHeader>
 
@@ -312,8 +310,7 @@ export default function LoginWithCodePage() {
                 className="bg-white text-slate-700 border-slate-200"
                 disabled
               >
-                <GoogleIcon />
-                <span className="ml-2">Google</span>
+                Google
               </Button>
               <Button
                 type="button"
@@ -321,18 +318,17 @@ export default function LoginWithCodePage() {
                 className="bg-white text-slate-700 border-slate-200"
                 disabled
               >
-                <AppleIcon />
-                <span className="ml-2">Apple</span>
+                Apple
               </Button>
             </div>
 
             <div className="text-center text-sm">
-              <span className="text-slate-600">Don't have an account?</span>{" "}
+              <span className="text-slate-600">Already have an account?</span>{" "}
               <Link
-                href={`/signup?login_challenge=${login_challenge}`}
+                href={`/login?login_challenge=${login_challenge}`}
                 className="font-medium text-indigo-600 hover:text-indigo-800"
               >
-                Create an account
+                Log in
               </Link>
             </div>
           </CardFooter>
@@ -340,4 +336,4 @@ export default function LoginWithCodePage() {
       </Card>
     </div>
   );
-}
+} 
