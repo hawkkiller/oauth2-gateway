@@ -65,7 +65,7 @@ export default function ConsentPage() {
           // Auto-redirect for trusted clients
           window.location.href = data.redirect_to;
 
-          return; // Return early as we're redirecting
+          return;
         }
 
         // Regular flow - show consent page
@@ -101,7 +101,8 @@ export default function ConsentPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             grant_scope: consent?.requested_scope,
-            grant_access_token_audience: consent?.requested_access_token_audience,
+            grant_access_token_audience:
+              consent?.requested_access_token_audience,
           }),
         }
       );
