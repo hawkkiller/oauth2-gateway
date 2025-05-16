@@ -25,7 +25,6 @@ export default function LoginWithCodePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
-  const login_challenge = searchParams.get("login_challenge");
 
   // State management
   const [email, setEmail] = useState("");
@@ -55,27 +54,6 @@ export default function LoginWithCodePage() {
       try {
         // If no flow ID, create a new login flow
         if (!flowId) {
-          const res = await fetch(`/api/login/flow`, {
-            method: "POST",
-            body: JSON.stringify({ login_challenge }),
-          });
-
-          if (!res.ok) {
-            throw new Error("Failed to fetch login flow");
-          }
-
-          const data = (await res.json()) as LoginFlow;
-
-          setFlowState({
-            flow: data,
-            isLoading: false,
-            error: null,
-          });
-
-          // Set the flow ID in the URL
-          router.replace(
-            `/login?flow=${data.id}&login_challenge=${login_challenge}`
-          );
           return;
         }
 
@@ -154,11 +132,7 @@ export default function LoginWithCodePage() {
         error: null,
       }));
 
-      router.replace(
-        `/login/code?flow=${
-          flowState.flow!.id
-        }&login_challenge=${login_challenge}`
-      );
+      router.replace(`/login/code?flow=${flowState.flow!.id}`);
     } catch (err: any) {
       setSubmitState({
         isSubmitting: false,
@@ -202,10 +176,6 @@ export default function LoginWithCodePage() {
         </Card>
       </div>
     );
-  }
-
-  if (!login_challenge || !flowId) {
-    return <div>Invalid login challenge or flow ID</div>;
   }
 
   // Main form
@@ -329,7 +299,7 @@ export default function LoginWithCodePage() {
             <div className="text-center text-sm">
               <span className="text-slate-600">Don't have an account?</span>{" "}
               <Link
-                href={`/signup?login_challenge=${login_challenge}`}
+                href={`/signup`}
                 className="font-medium text-indigo-600 hover:text-indigo-800"
               >
                 Create an account
