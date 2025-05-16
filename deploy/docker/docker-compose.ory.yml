@@ -27,7 +27,7 @@ services:
       - SERVE_ADMIN_BASE_URL=http://kratos:4434/
       - COURIER_SMTP_CONNECTION_URI=${KRATOS_SMTP_CONNECTION_URI}
       - COURIER_SMTP_FROM_ADDRESS=${KRATOS_SMTP_FROM_ADDRESS}
-      - OAUTH2_PROVIDER_URL=http://hydra:4445/
+      - OAUTH2_PROVIDER_URL=http://hydra:4445
     volumes:
       - kratos-data:/var/lib/sqlite
       - ./kratos:/etc/config/kratos:ro
