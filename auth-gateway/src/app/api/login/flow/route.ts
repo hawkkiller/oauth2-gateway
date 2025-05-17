@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
  * @returns A JSON response containing the login flow data
  */
 export async function GET(req: NextRequest) {
-  const cookie = req.headers.get("cookie");
+  const cookie = req.headers.get("cookie") || undefined;
   const url = new URL(req.url);
   const flowId = url.searchParams.get("id");
 
@@ -20,10 +20,8 @@ export async function GET(req: NextRequest) {
   try {
     const flow = await kratosPublic.getLoginFlow({
       id: flowId,
-      cookie: cookie || undefined,
+      cookie: cookie,
     });
-
-    console.log("GETFLOW", flow.data);
 
     // Create a response with the flow data
     const response = NextResponse.json(flow.data);
@@ -31,7 +29,6 @@ export async function GET(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Error with login flow:", error);
     return NextResponse.json(
       { error: "Failed to process login flow" },
       { status: 500 }
@@ -46,17 +43,21 @@ export async function GET(req: NextRequest) {
  * @returns A JSON response containing the login flow data
  */
 export async function POST(req: NextRequest) {
-  const cookie = req.headers.get("cookie");
-  const { login_challenge } = await req.json();
+  const cookie = req.headers.get("cookie") || undefined;
+  const url = new URL(req.url);
+  const loginChallenge = url.searchParams.get("login_challenge");
 
-  console.log(cookie);
+  if (!loginChallenge) {
+    return NextResponse.json(
+      { error: "No login challenge provided" },
+      { status: 400 }
+    );
+  }
 
   const flow = await kratosPublic.createBrowserLoginFlow({
-    cookie: cookie || undefined,
-    loginChallenge: login_challenge,
+    cookie: cookie,
+    loginChallenge,
   });
-
-  console.log("POSTflow", flow.data);
 
   const response = NextResponse.json(flow.data);
   forwardSetCookieHeader(flow.headers["set-cookie"], response);

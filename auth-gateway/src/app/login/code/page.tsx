@@ -2,8 +2,11 @@
 
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import {
+  findEmailInNodes
+} from "@/common/ory/ui_nodes_helper";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,125 +21,58 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import {
-  LoginFlow,
-  UiNodeInputAttributes,
-  UiNodeTypeEnum,
-} from "@ory/kratos-client";
-import {
-  findCsrfTokenInNodes,
-  findEmailInNodes,
-} from "@/common/ory/ui_nodes_helper";
+import { FlowError } from "@/feature/auth/components/flowError";
+import { useLoginFlow } from "@/feature/auth/hooks/useLoginFlow";
+import { useLoginSubmitCodeForm } from "@/feature/auth/hooks/useLoginSubmitCodeForm";
 
 /**
  * OTP verification page component
  * Handles verification of the one-time password sent to users during login
  */
 export default function OTPSubmitPage() {
-  // Single state management object
-  const [state, setState] = useState({
-    code: "",
-    flow: null as LoginFlow | null,
-    isLoading: false,
-    isRedirecting: false,
-    error: null as string | null,
-  });
-
   // Router and params
   const router = useRouter();
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
-  const login_challenge = searchParams.get("login_challenge");
 
-  // Fetch login flow on component mount
-  useEffect(() => {
-    const fetchFlow = async () => {
-      if (!flowId) return;
+  const flowState = useLoginFlow(flowId, null);
+  const flowEmail = findEmailInNodes(flowState.flow?.ui?.nodes || []);
 
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        const res = await fetch(`/api/login/flow?id=${flowId}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch login flow");
-        }
-        const data = await res.json();
-        setState(prev => ({ 
-          ...prev, 
-          flow: data, 
-          isLoading: false 
-        }));
-      } catch (err: any) {
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: err?.message || "Failed to fetch login flow"
-        }));
-      }
-    };
-
-    fetchFlow();
-  }, []);
+  const [code, setCode] = useState("");
+  const { submitState, submitCode } = useLoginSubmitCodeForm();
+  const isProcessing = submitState.isSubmitting || submitState.isRedirecting;
 
   // Handle OTP verification submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!state.flow || !flowId) {
-      setState(prev => ({ ...prev, error: "Login flow not found" }));
+    if (!flowState.flow) {
       return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      // Find CSRF token from login flow
-      const csrf_token = findCsrfTokenInNodes(state.flow.ui.nodes);
-      const email = findEmailInNodes(state.flow.ui.nodes);
-
-      if (!csrf_token || !email) {
-        throw new Error("CSRF token or email not found");
-      }
-
-      const res = await fetch(`/api/login/code/verify?flow=${flowId}`, {
-        method: "POST",
-        body: JSON.stringify({
-          code: state.code,
-          csrf_token,
-          email,
-        }),
-      });
-
-      const { redirect_browser_to } = await res.json();
-
-      if (redirect_browser_to) {
-        setState(prev => ({ ...prev, isLoading: false, isRedirecting: true }));
-        window.location.href = redirect_browser_to;
-        return;
-      }
-
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false,
-        error: "Something went wrong" 
-      }));
-    } catch (err: any) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: err?.message || "Failed to verify code. Please try again."
-      }));
-    }
+    await submitCode(code, flowState.flow!);
   };
 
   // Update code in state
   const handleCodeChange = (code: string) => {
-    setState(prev => ({ ...prev, code }));
+    setCode(code);
   };
 
-  // Show error page if required parameters are missing
-  if (!flowId) {
-    return <InvalidFlowError />;
+  if (flowState.isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md shadow-lg border-0 py-8">
+          <CardContent className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
+            <p className="text-slate-600">Loading login form...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (flowState.error) {
+    return <FlowError error={flowState.error} />;
   }
 
   return (
@@ -147,7 +83,7 @@ export default function OTPSubmitPage() {
             Verification Code
           </CardTitle>
           <CardDescription className="text-center">
-            Enter the 6-digit code sent to your email
+            Enter the 6-digit code sent to {flowEmail || "your email"}
           </CardDescription>
         </CardHeader>
 
@@ -156,9 +92,9 @@ export default function OTPSubmitPage() {
             <div className="flex justify-center py-2">
               <InputOTP
                 maxLength={6}
-                value={state.code}
+                value={code}
                 onChange={handleCodeChange}
-                disabled={state.isLoading || state.isRedirecting}
+                disabled={isProcessing}
                 containerClassName="justify-center gap-2"
               >
                 <InputOTPGroup>
@@ -173,19 +109,21 @@ export default function OTPSubmitPage() {
               </InputOTP>
             </div>
 
-            {state.error && <ErrorMessage message={state.error} />}
+            {submitState.error && <ErrorMessage message={submitState.error} />}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-5">
             <Button
               type="submit"
               className="w-full font-medium h-11 transition-all"
-              disabled={state.isLoading || state.isRedirecting || state.code.length < 6}
+              disabled={isProcessing || code.length < 6}
             >
-              {state.isLoading || state.isRedirecting ? (
+              {submitState.isSubmitting || submitState.isRedirecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {state.isRedirecting ? "Redirecting..." : "Verifying..."}
+                  {submitState.isRedirecting
+                    ? "Redirecting..."
+                    : "Verifying..."}
                 </>
               ) : (
                 <>
@@ -199,9 +137,10 @@ export default function OTPSubmitPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => router.push(`/login?login_challenge=${login_challenge}`)}
+                  // TODO: Add login challenge to the URL
+                  onClick={() => router.push(`/login`)}
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
-                  disabled={state.isLoading || state.isRedirecting}
+                  disabled={isProcessing}
                 >
                   ← Back to login
                 </button>

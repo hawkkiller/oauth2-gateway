@@ -1,12 +1,10 @@
 "use client";
 
-import { LoginFlow } from "@ory/kratos-client";
 import { AlertCircle, ArrowRight, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { findCsrfTokenInNodes } from "@/common/ory/ui_nodes_helper";
 import AppleIcon from "@/components/icons/apple-icon";
 import GoogleIcon from "@/components/icons/google-icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,126 +18,40 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useLoginSubmitEmailForm } from "@/feature/auth/hooks/useLoginSubmitEmailForm";
+import { useLoginFlow } from "@/feature/auth/hooks/useLoginFlow";
+import { FlowError } from "@/feature/auth/components/flowError";
 
-export default function LoginWithCodePage() {
+export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
+  const loginChallenge = searchParams.get("login_challenge");
 
-  // State management
+  const flowState = useLoginFlow(flowId, loginChallenge);
   const [email, setEmail] = useState("");
-  const [flowState, setFlowState] = useState<{
-    flow: LoginFlow | null;
-    isLoading: boolean;
-    error: string | null;
-  }>({
-    flow: null,
-    isLoading: true,
-    error: null,
-  });
+  const { submitState, submitEmail } = useLoginSubmitEmailForm();
 
-  const [submitState, setSubmitState] = useState<{
-    isSubmitting: boolean;
-    isRedirecting: boolean;
-    error: string | null;
-  }>({
-    isSubmitting: false,
-    isRedirecting: false,
-    error: null,
-  });
+  const isProcessing = submitState.isSubmitting || submitState.isRedirecting;
+  const isEmailValid = email && email.includes("@");
 
-  // Fetch the login flow on mount
   useEffect(() => {
-    const fetchFlow = async () => {
-      try {
-        // If no flow ID, create a new login flow
-        if (!flowId) {
-          return;
-        }
+    const flowId = flowState.flow?.id;
 
-        const res = await fetch(`/api/login/flow?id=${flowId}`);
+    if (flowId && loginChallenge) {
+      router.replace(`/login?flow=${flowId}`);
+    }
+  }, [flowState.flow]);
 
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to fetch login flow");
-        }
-
-        const data = (await res.json()) as LoginFlow;
-
-        setFlowState({
-          flow: data,
-          isLoading: false,
-          error: null,
-        });
-      } catch (err: any) {
-        setFlowState({
-          flow: null,
-          isLoading: false,
-          error: err.message || "Error fetching login flow",
-        });
-      }
-    };
-
-    fetchFlow();
-  }, []);
-
-  // Handle form submission to get login code
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Handle form submission
+  const onEmailFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Reset errors and set loading
-    setSubmitState((prev) => ({
-      ...prev,
-      isSubmitting: true,
-      error: null,
-    }));
-
-    // Validate flow
     if (!flowState.flow) {
-      setSubmitState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: "Login flow not found",
-      }));
       return;
     }
 
-    try {
-      // Find CSRF token
-      const csrfToken = findCsrfTokenInNodes(flowState.flow.ui.nodes);
-
-      if (!csrfToken) {
-        throw new Error("CSRF token not found");
-      }
-
-      // Request login code
-      const res = await fetch(`/api/login/code?flow=${flowState.flow.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, csrf_token: csrfToken }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to send login code");
-      }
-
-      // Set redirecting state and navigate
-      setSubmitState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        isRedirecting: true,
-        error: null,
-      }));
-
-      router.replace(`/login/code?flow=${flowState.flow!.id}`);
-    } catch (err: any) {
-      setSubmitState({
-        isSubmitting: false,
-        isRedirecting: false,
-        error: err.message || "Authentication failed",
-      });
-    }
+    await submitEmail(email, flowState.flow);
   };
 
   // Loading state while fetching flow
@@ -158,27 +70,9 @@ export default function LoginWithCodePage() {
 
   // Error state if flow fetch failed
   if (flowState.error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-md shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Login Error</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{flowState.error}</AlertDescription>
-            </Alert>
-            <Button className="w-full" onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <FlowError error={flowState.error} />;
   }
 
-  // Main form
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
@@ -191,7 +85,7 @@ export default function LoginWithCodePage() {
           </CardDescription>
         </CardHeader>
 
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        <form className="space-y-4" onSubmit={onEmailFormSubmit} noValidate>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label
@@ -211,9 +105,7 @@ export default function LoginWithCodePage() {
                   className="pl-10 text-slate-900 bg-white border-slate-200"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={
-                    submitState.isSubmitting || submitState.isRedirecting
-                  }
+                  disabled={isProcessing}
                   aria-invalid={!!submitState.error}
                   aria-describedby={
                     submitState.error ? "email-error" : undefined
@@ -238,13 +130,8 @@ export default function LoginWithCodePage() {
             <Button
               type="submit"
               className="w-full font-medium h-11"
-              disabled={
-                submitState.isSubmitting ||
-                submitState.isRedirecting ||
-                !email ||
-                !email.includes("@")
-              }
-              aria-busy={submitState.isSubmitting}
+              aria-busy={isProcessing}
+              disabled={isProcessing || !isEmailValid}
             >
               {submitState.isSubmitting ? (
                 <>

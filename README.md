@@ -3,15 +3,12 @@ OAuth2 Client
     ▼
 Hydra public
     │ 2. 302 → urls.login  
-    │     /self-service/login/browser?login_challenge=XYZ
+    │     /login?login_challenge=XYZ
     ▼
-Kratos public
-    │ 3. 302 → ui_url  
-    │     /login?flow=ABC&login_challenge=XYZ
-    ▼
-Login UI (React/Next)
-    │ 4. XHR → Kratos /self-service/login/flows?id=ABC  
-    │ 5. XHR → Kratos /self-service/login?flow=ABC (POST creds)
+Auth Gateway
+    │ 3. XHR → Kratos /self-service/login/browser (GET login flow) 
+    │ 4. XHR → Kratos /self-service/login (PUT email)
+    │ 5. XHR → Kratos /self-service/login (PUT code)
     ▼
 Kratos public
     │ 6. GET  → Hydra admin /requests/login?login_challenge=XYZ  

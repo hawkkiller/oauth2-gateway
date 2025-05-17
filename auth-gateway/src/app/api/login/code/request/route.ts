@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   const url = new URL(request.url);
   const flow = url.searchParams.get("flow");
+
   try {
     const { email, csrf_token } = await request.json();
 
@@ -20,9 +21,9 @@ export async function POST(request: NextRequest) {
       flow,
       cookie: request.headers.get("cookie") || undefined,
       updateLoginFlowBody: {
+        csrf_token,
         identifier: email,
         method: "code",
-        csrf_token,
       },
     });
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       const loginFlow = error.response.data as LoginFlow;
 
       if (loginFlow.id === flow && loginFlow.state === "sent_email") {
-        return NextResponse.json({ success: true });
+        return NextResponse.json(loginFlow);
       }
     }
 
