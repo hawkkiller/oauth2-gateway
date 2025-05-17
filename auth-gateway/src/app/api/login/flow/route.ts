@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
     forwardSetCookieHeader(flow.headers["set-cookie"], response);
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error?.response?.data);
     return NextResponse.json(
       { error: "Failed to process login flow" },
       { status: 500 }
@@ -57,7 +58,10 @@ export async function POST(req: NextRequest) {
   const flow = await kratosPublic.createBrowserLoginFlow({
     cookie: cookie,
     loginChallenge,
+    refresh: true,
   });
+
+  console.log(flow.data);
 
   const response = NextResponse.json(flow.data);
   forwardSetCookieHeader(flow.headers["set-cookie"], response);

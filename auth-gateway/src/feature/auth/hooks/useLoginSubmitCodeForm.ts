@@ -37,6 +37,8 @@ export function useLoginSubmitCodeForm() {
         email,
       });
 
+      console.log(res);
+
       window.location.href = res.redirect_browser_to;
       setState((prev) => ({
         ...prev,

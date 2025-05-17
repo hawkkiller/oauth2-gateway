@@ -2,7 +2,7 @@ import {
   VerifyCodeProps,
   VerifyCodeResponse,
 } from "@/app/api/login/code/verify/route";
-import { LoginFlow } from "@ory/kratos-client";
+import { LoginFlow, Session } from "@ory/kratos-client";
 
 /**
  * Creates login flow in Kratos and returns it
@@ -71,6 +71,35 @@ export async function verifyLoginCode(
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to verify login code");
+  }
+
+  return res.json();
+}
+
+/**
+ * Returns session from Kratos
+ */
+export async function getSession(): Promise<Session> {
+  const res = await fetch(`/api/session`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch session");
+  }
+
+  return res.json();
+}
+
+/**
+ * Login with active session
+ */
+export async function loginWithActiveSession(loginChallenge: string) {
+  const res = await fetch(`/api/login/active`, {
+    method: "POST",
+    body: JSON.stringify({ login_challenge: loginChallenge }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to login with active session");
   }
 
   return res.json();

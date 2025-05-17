@@ -1,7 +1,5 @@
 version: v1.3.0
 
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
-
 identity:
   default_schema_id: default
   schemas:

@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { useLoginSubmitEmailForm } from "@/feature/auth/hooks/useLoginSubmitEmailForm";
 import { useLoginFlow } from "@/feature/auth/hooks/useLoginFlow";
 import { FlowError } from "@/feature/auth/components/flowError";
+import { useSession } from "@/feature/auth/hooks/useSession";
+import { useLoginWithActiveSession } from "@/feature/auth/hooks/useLoginWithActiveSession";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,8 +31,8 @@ export default function LoginPage() {
   const loginChallenge = searchParams.get("login_challenge");
 
   const flowState = useLoginFlow(flowId, loginChallenge);
-  const [email, setEmail] = useState("");
   const { submitState, submitEmail } = useLoginSubmitEmailForm();
+  const [email, setEmail] = useState("");
 
   const isProcessing = submitState.isSubmitting || submitState.isRedirecting;
   const isEmailValid = email && email.includes("@");
@@ -57,11 +59,11 @@ export default function LoginPage() {
   // Loading state while fetching flow
   if (flowState.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md shadow-lg border-0 py-8">
           <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-            <p className="text-slate-600">Loading login form...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground">Loading login form...</p>
           </CardContent>
         </Card>
       </div>
@@ -74,35 +76,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-bold">
             Login with Code
           </CardTitle>
-          <CardDescription className="text-center text-slate-500">
+          <CardDescription className="text-center">
             Enter your email to receive a login code
           </CardDescription>
         </CardHeader>
+        
+        {flowState.flow?.oauth2_login_request?.challenge && (
+          <SignInWithActiveSession loginChallenge={flowState.flow.oauth2_login_request.challenge} />
+        )}
 
         <form className="space-y-4" onSubmit={onEmailFormSubmit} noValidate>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-foreground"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="email"
                   id="email"
                   name="email"
                   required
                   placeholder="you@example.com"
-                  className="pl-10 text-slate-900 bg-white border-slate-200"
+                  className="pl-10 text-foreground bg-background"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isProcessing}
@@ -115,14 +121,10 @@ export default function LoginPage() {
             </div>
 
             {submitState.error && (
-              <div
-                id="email-error"
-                className="text-red-600 text-sm flex items-center gap-1 p-2 bg-red-50 rounded"
-                role="alert"
-              >
+              <Alert variant="destructive" id="email-error" role="alert">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{submitState.error}</span>
-              </div>
+                <AlertDescription>{submitState.error}</AlertDescription>
+              </Alert>
             )}
           </CardContent>
 
@@ -153,10 +155,10 @@ export default function LoginPage() {
 
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
+                <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-slate-500">
+                <span className="bg-card px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
@@ -166,7 +168,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
+                className="bg-background text-foreground"
                 disabled
               >
                 <GoogleIcon />
@@ -175,7 +177,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
+                className="bg-background text-foreground"
                 disabled
               >
                 <AppleIcon />
@@ -184,10 +186,12 @@ export default function LoginPage() {
             </div>
 
             <div className="text-center text-sm">
-              <span className="text-slate-600">Don't have an account?</span>{" "}
+              <span className="text-muted-foreground">
+                Don't have an account?
+              </span>{" "}
               <Link
                 href={`/signup`}
-                className="font-medium text-indigo-600 hover:text-indigo-800"
+                className="font-medium text-primary hover:text-primary/90"
               >
                 Create an account
               </Link>
@@ -195,6 +199,47 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+    </div>
+  );
+}
+
+/**
+ * Component that renders "You are already logged in as {email}"
+ * and a button to "Sign In using active session"
+ */
+function SignInWithActiveSession({ loginChallenge }: { loginChallenge: string }) {
+  const sessionState = useSession();
+  const { state, loginWithActiveSession } = useLoginWithActiveSession(loginChallenge);
+
+  if (!sessionState.session?.identity?.traits?.email) return null;
+
+  return (
+    <div className="px-4 pb-4">
+      <div className="w-full rounded-md bg-muted p-3 border">
+        <div className="text-sm text-foreground mb-2">
+          <p>You are already logged in as:</p>
+          <p className="font-medium truncate">
+            {sessionState.session.identity.traits.email}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full bg-background hover:bg-muted text-foreground"
+          onClick={loginWithActiveSession}
+          disabled={state.isLoading}
+        >
+          {state.isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            "Sign in using active session"
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -19,6 +19,7 @@ AUTH_URL="${AUTH_URL}?client_id=${CLIENT_ID}\
 &state=${STATE}\
 &code_challenge=${CODE_CHALLENGE}\
 &code_challenge_method=S256\
+&prompt=login\
 &redirect_uri=${REDIRECT_URI}"
 
 # Output the generated URL

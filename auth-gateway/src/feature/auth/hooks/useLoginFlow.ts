@@ -26,6 +26,7 @@ export function useLoginFlow(
       try {
         // If no flow ID is provided, create a new login flow with the login challenge
         if (!flowId && loginChallenge) {
+          console.log("Creating login flow");
           const res = await createLoginFlow(loginChallenge);
           setState({
             flow: res,

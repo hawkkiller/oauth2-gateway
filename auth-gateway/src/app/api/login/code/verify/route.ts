@@ -35,11 +35,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log(res.data);
+
     return NextResponse.json(
       { message: "Something went wrong" },
       { status: 500 }
     );
   } catch (error: any) {
+    console.log(error.response.data);
+
     const redirect_browser_to = error?.response?.data?.redirect_browser_to;
     if (redirect_browser_to) {
       const res = NextResponse.json<VerifyCodeResponse>({
