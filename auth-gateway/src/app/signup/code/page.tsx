@@ -180,7 +180,7 @@ export default function SignupOTPSubmitPage() {
 function ErrorMessage({ message }: { message: string }) {
   return (
     <div
-      className="text-red-600 text-sm flex items-center gap-1 p-2 bg-red-50 rounded"
+      className="text-destructive text-sm flex items-center gap-1 p-2 bg-destructive/10 rounded"
       role="alert"
     >
       <AlertCircle className="h-4 w-4 flex-shrink-0" />

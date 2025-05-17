@@ -7,7 +7,7 @@ import { AlertCircle } from "lucide-react";
 
 export function FlowError({ error }: { error: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Login Error</CardTitle>

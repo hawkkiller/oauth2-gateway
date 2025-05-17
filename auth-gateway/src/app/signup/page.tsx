@@ -169,11 +169,11 @@ export default function SignupWithCodePage() {
   // Loading state while fetching flow
   if (flowState.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md shadow-lg border-0 py-8">
           <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-            <p className="text-slate-600">Loading signup form...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground">Loading signup form...</p>
           </CardContent>
         </Card>
       </div>
@@ -183,7 +183,7 @@ export default function SignupWithCodePage() {
   // Error state if flow fetch failed
   if (flowState.error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md shadow-lg border-0">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Signup Error</CardTitle>
@@ -208,13 +208,13 @@ export default function SignupWithCodePage() {
 
   // Main form
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center font-bold">
             Sign Up with Code
           </CardTitle>
-          <CardDescription className="text-center text-slate-500">
+          <CardDescription className="text-center">
             Enter your email to receive a signup code
           </CardDescription>
         </CardHeader>
@@ -224,19 +224,19 @@ export default function SignupWithCodePage() {
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-foreground"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="email"
                   id="email"
                   name="email"
                   required
                   placeholder="you@example.com"
-                  className="pl-10 text-slate-900 bg-white border-slate-200"
+                  className="pl-10 text-foreground bg-background"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={
@@ -251,14 +251,10 @@ export default function SignupWithCodePage() {
             </div>
 
             {submitState.error && (
-              <div
-                id="email-error"
-                className="text-red-600 text-sm flex items-center gap-1 p-2 bg-red-50 rounded"
-                role="alert"
-              >
+              <Alert variant="destructive" id="email-error" role="alert">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{submitState.error}</span>
-              </div>
+                <AlertDescription>{submitState.error}</AlertDescription>
+              </Alert>
             )}
           </CardContent>
 
@@ -294,10 +290,10 @@ export default function SignupWithCodePage() {
 
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
+                <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-slate-500">
+                <span className="bg-card px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
@@ -307,7 +303,7 @@ export default function SignupWithCodePage() {
               <Button
                 type="button"
                 variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
+                className="bg-background text-foreground"
                 disabled
               >
                 Google
@@ -315,7 +311,7 @@ export default function SignupWithCodePage() {
               <Button
                 type="button"
                 variant="outline"
-                className="bg-white text-slate-700 border-slate-200"
+                className="bg-background text-foreground"
                 disabled
               >
                 Apple
@@ -323,10 +319,10 @@ export default function SignupWithCodePage() {
             </div>
 
             <div className="text-center text-sm">
-              <span className="text-slate-600">Already have an account?</span>{" "}
+              <span className="text-muted-foreground">Already have an account?</span>{" "}
               <Link
                 href={`/login?login_challenge=${login_challenge}`}
-                className="font-medium text-indigo-600 hover:text-indigo-800"
+                className="font-medium text-primary hover:text-primary/90"
               >
                 Log in
               </Link>

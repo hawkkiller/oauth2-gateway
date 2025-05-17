@@ -60,11 +60,11 @@ export default function OTPSubmitPage() {
 
   if (flowState.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md shadow-lg border-0 py-8">
           <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-            <p className="text-slate-600">Loading login form...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground">Loading login form...</p>
           </CardContent>
         </Card>
       </div>
@@ -170,16 +170,16 @@ function ErrorMessage({ message }: { message: string }) {
  */
 function InvalidFlowError() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader className="border-b bg-red-50">
-          <CardTitle className="text-2xl text-center w-full py-3 flex items-center justify-center gap-2 text-red-700">
+        <CardHeader className="border-b bg-destructive/10">
+          <CardTitle className="text-2xl text-center w-full py-3 flex items-center justify-center gap-2 text-destructive">
             <AlertCircle className="w-6 h-6" />
             Invalid Login Flow
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 px-6">
-          <div className="text-center text-gray-700 space-y-4">
+          <div className="text-center text-foreground space-y-4">
             <div className="text-5xl mb-4 flex justify-center">🔒</div>
             <p className="text-lg font-medium">
               The login flow is invalid or has expired.
