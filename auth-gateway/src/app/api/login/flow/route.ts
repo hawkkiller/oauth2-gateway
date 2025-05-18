@@ -61,8 +61,6 @@ export async function POST(req: NextRequest) {
     refresh: true,
   });
 
-  console.log(flow.data);
-
   const response = NextResponse.json(flow.data);
   forwardSetCookieHeader(flow.headers["set-cookie"], response);
 

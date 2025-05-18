@@ -1,3 +1,4 @@
+import { LoginWithActiveSessionResponse } from "@/app/api/login/active/route";
 import {
   VerifyCodeProps,
   VerifyCodeResponse,
@@ -92,7 +93,9 @@ export async function getSession(): Promise<Session> {
 /**
  * Login with active session
  */
-export async function loginWithActiveSession(loginChallenge: string) {
+export async function loginWithActiveSession(
+  loginChallenge: string
+): Promise<LoginWithActiveSessionResponse> {
   const res = await fetch(`/api/login/active`, {
     method: "POST",
     body: JSON.stringify({ login_challenge: loginChallenge }),
@@ -103,4 +106,17 @@ export async function loginWithActiveSession(loginChallenge: string) {
   }
 
   return res.json();
+}
+
+/**
+ * Sign out from Kratos
+ */
+export async function signOut(): Promise<void> {
+  const res = await fetch(`/api/logout`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to sign out");
+  }
 }

@@ -76,10 +76,6 @@ export default function SignupOTPSubmitPage() {
       const csrf_token = findCsrfTokenInNodes(state.flow.ui.nodes);
       const email = findEmailInNodes(state.flow.ui.nodes);
 
-      console.log("csrf_token", csrf_token);
-      console.log("email", email);
-      console.log(state.flow.ui.nodes);
-
       if (!csrf_token || !email) {
         throw new Error("CSRF token or email not found");
       }
@@ -99,7 +95,7 @@ export default function SignupOTPSubmitPage() {
 
       await res.json();
 
-      window.location.href = `/login?login_challenge=${login_challenge}`;
+      window.location.href = `/login?login_challenge=${login_challenge}&from_registration=true`;
     } catch (err: any) {
       setState((prev) => ({
         ...prev,

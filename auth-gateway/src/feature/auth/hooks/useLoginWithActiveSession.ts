@@ -7,14 +7,14 @@ export type LoginWithActiveSessionState = {
   error: string | null;
 };
 
-export function useLoginWithActiveSession(loginChallenge: string) {
+export function useLoginWithActiveSession() {
   const router = useRouter();
   const [state, setState] = useState<LoginWithActiveSessionState>({
     isLoading: false,
     error: null,
   });
 
-  const $loginWithActiveSession = async () => {
+  const $loginWithActiveSession = async (loginChallenge: string) => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
       const response = await loginWithActiveSession(loginChallenge);
