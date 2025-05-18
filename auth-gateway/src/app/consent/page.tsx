@@ -65,7 +65,7 @@ export default function ConsentPage() {
           // Auto-redirect for trusted clients
           window.location.href = data.redirect_to;
 
-          return; // Return early as we're redirecting
+          return;
         }
 
         // Regular flow - show consent page
@@ -101,7 +101,8 @@ export default function ConsentPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             grant_scope: consent?.requested_scope,
-            grant_access_token_audience: consent?.requested_access_token_audience,
+            grant_access_token_audience:
+              consent?.requested_access_token_audience,
           }),
         }
       );
@@ -136,7 +137,7 @@ export default function ConsentPage() {
         <Card className="w-full max-w-md shadow-lg">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-            <p className="text-lg font-medium text-gray-700">
+            <p className="text-lg font-medium text-foreground">
               Loading consent request...
             </p>
           </CardContent>
@@ -149,17 +150,17 @@ export default function ConsentPage() {
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-muted/50">
-        <Card className="w-full max-w-md shadow-lg border-red-200">
+        <Card className="w-full max-w-md shadow-lg border-destructive/50">
           <CardHeader className="flex flex-col items-center pb-2">
-            <div className="bg-red-50 rounded-full p-4 mb-2">
-              <AlertCircle className="w-8 h-8 text-red-500" />
+            <div className="bg-destructive/10 rounded-full p-4 mb-2">
+              <AlertCircle className="w-8 h-8 text-destructive" />
             </div>
-            <CardTitle className="text-xl text-center text-red-700">
+            <CardTitle className="text-xl text-center text-destructive">
               Something went wrong
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-6">
-            <p className="text-center text-gray-700">{error}</p>
+            <p className="text-center text-foreground">{error}</p>
           </CardContent>
           <CardFooter className="flex justify-center pb-6">
             <Button
@@ -181,15 +182,15 @@ export default function ConsentPage() {
       <div className="flex justify-center items-center min-h-screen bg-muted/50">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="flex flex-col items-center">
-            <div className="bg-gray-100 rounded-full p-4 mb-2">
-              <AlertCircle className="w-8 h-8 text-gray-500" />
+            <div className="bg-muted rounded-full p-4 mb-2">
+              <AlertCircle className="w-8 h-8 text-muted-foreground" />
             </div>
-            <CardTitle className="text-xl text-center text-gray-700">
+            <CardTitle className="text-xl text-center text-foreground">
               No consent request found
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-6">
-            <p className="text-center text-gray-600">
+            <p className="text-center text-muted-foreground">
               We couldn't find a valid consent request to display.
             </p>
           </CardContent>
@@ -230,8 +231,8 @@ export default function ConsentPage() {
                 }}
               />
             ) : (
-              <div className="bg-primary-50 rounded-full p-4">
-                <Shield className="w-8 h-8 text-primary-500" />
+              <div className="bg-primary/10 rounded-full p-4">
+                <Shield className="w-8 h-8 text-primary" />
               </div>
             )}
           </div>
@@ -247,19 +248,19 @@ export default function ConsentPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="bg-muted p-4 rounded-lg">
-              <h3 className="font-medium text-sm text-gray-500 mb-1">USER</h3>
+              <h3 className="font-medium text-sm text-muted-foreground mb-1">USER</h3>
               <p className="text-lg font-medium">{consent.subject}</p>
             </div>
 
             <div>
-              <h3 className="font-medium text-sm text-gray-500 mb-2">
+              <h3 className="font-medium text-sm text-muted-foreground mb-2">
                 PERMISSIONS REQUESTED
               </h3>
               <ul className="space-y-2">
                 {consent.requested_scope?.map((scope) => (
                   <li key={scope} className="flex items-start">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-800">{formatScope(scope)}</span>
+                    <span className="text-foreground">{formatScope(scope)}</span>
                   </li>
                 ))}
               </ul>

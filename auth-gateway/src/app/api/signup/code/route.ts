@@ -1,5 +1,5 @@
 import { kratosPublic } from "@/common/ory/ory";
-import { LoginFlow } from "@ory/kratos-client";
+import { RegistrationFlow } from "@ory/kratos-client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -15,29 +15,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initiate the code-based login
-    const response = await kratosPublic.updateLoginFlow({
+    // Initiate the code-based registration
+    const response = await kratosPublic.updateRegistrationFlow({
       flow,
       cookie: request.headers.get("cookie") || undefined,
-      updateLoginFlowBody: {
-        identifier: email,
+      updateRegistrationFlowBody: {
+        traits: { email },
         method: "code",
         csrf_token,
       },
     });
 
+    console.log("response", JSON.stringify(response.data, null, 2));
+
     return NextResponse.json(response.data, {
       status: 400,
     });
   } catch (error: any) {
+    console.log("error", JSON.stringify(error.response.data, null, 2));
     if (error.response?.data && "id" in error.response.data) {
-      const loginFlow = error.response.data as LoginFlow;
-
-      if (loginFlow.id === flow && loginFlow.state === "sent_email") {
+      const registrationFlow = error.response.data as RegistrationFlow;
+      if (
+        registrationFlow.id === flow &&
+        registrationFlow.state === "sent_email"
+      ) {
         return NextResponse.json({ success: true });
       }
     }
-
     return NextResponse.json(
       { message: error.message || "Internal server error" },
       { status: 500 }

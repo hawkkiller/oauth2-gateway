@@ -1,7 +1,5 @@
 version: v1.3.0
 
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
-
 identity:
   default_schema_id: default
   schemas:
@@ -12,6 +10,7 @@ selfservice:
   default_browser_return_url: http://127.0.0.1:5555/welcome
   allowed_return_urls:
     - http://127.0.0.1:5555
+    - http://127.0.0.1:5555/callback
   methods:
     code:
       passwordless_enabled: true
@@ -35,7 +34,7 @@ selfservice:
     registration:
       lifespan: 10m
       enabled: true
-      ui_url: http://127.0.0.1:5555/registration
+      ui_url: http://127.0.0.1:5555/signup
       after:
         code:
           hooks:
@@ -68,3 +67,17 @@ courier:
     # from_address is supplied from ENV
     from_name: Learny
     local_name: learny
+
+cookies:
+  domain: 127.0.0.1
+  path: /
+  same_site: Lax
+
+session:
+  cookie:
+    name: ory_kratos_session
+    domain: 127.0.0.1
+    persistent: true
+    path: /
+    same_site: Lax
+  lifespan: "24h"

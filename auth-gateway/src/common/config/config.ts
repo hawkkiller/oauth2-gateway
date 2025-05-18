@@ -5,6 +5,6 @@ export const AuthConfig = {
   },
   kratos: {
     adminUrl: process.env.KRATOS_ADMIN_URL,
-    publicUrl: process.env.KRATOS_PUBLIC_URL,
+    publicUrl: process.env.NEXT_PUBLIC_KRATOS_PUBLIC_URL,
   },
 };
