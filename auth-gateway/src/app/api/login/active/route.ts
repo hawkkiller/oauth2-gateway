@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
 
     // Forward any cookies from Kratos
     forwardSetCookieHeader(sessionResponse.headers["set-cookie"], response);
+    forwardSetCookieHeader(acceptResponse.headers["set-cookie"], response);
 
     return response;
   } catch (error: any) {

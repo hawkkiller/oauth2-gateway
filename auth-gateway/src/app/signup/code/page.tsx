@@ -23,6 +23,7 @@ import {
   findCsrfTokenInNodes,
   findEmailInNodes,
 } from "@/common/ory/ui_nodes_helper";
+import { FlowError } from "@/feature/auth/components/flowError";
 
 export default function SignupOTPSubmitPage() {
   const [state, setState] = useState({
@@ -96,7 +97,7 @@ export default function SignupOTPSubmitPage() {
         throw new Error("Failed to verify code");
       }
 
-      const data = await res.json();
+      await res.json();
 
       window.location.href = `/login?login_challenge=${login_challenge}`;
     } catch (err: any) {
@@ -113,7 +114,7 @@ export default function SignupOTPSubmitPage() {
   };
 
   if (!flowId) {
-    return <InvalidFlowError />;
+    return <FlowError error="Signup flow not found" />;
   }
 
   return (
@@ -185,25 +186,6 @@ function ErrorMessage({ message }: { message: string }) {
     >
       <AlertCircle className="h-4 w-4 flex-shrink-0" />
       <span>{message}</span>
-    </div>
-  );
-}
-
-function InvalidFlowError() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            Invalid Signup Flow
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center">
-            The signup flow is invalid or missing. Please try again.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
