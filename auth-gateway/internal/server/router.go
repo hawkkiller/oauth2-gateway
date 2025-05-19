@@ -18,7 +18,24 @@ func NewRouter(appConfig *config.AppConfig) *httprouter.Router {
 
 	r.PanicHandler = recovery()
 
+	r.GET("/healthz", healthz)
+	r.GET("/readyz", readyz)
+
 	return r
+}
+
+// healthz is a simple health check endpoint.
+func healthz(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	w.WriteHeader(http.StatusOK)
+
+	_, _ = w.Write([]byte("OK"))
+}
+
+// readyz is a simple readiness check endpoint.
+func readyz(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	w.WriteHeader(http.StatusOK)
+
+	_, _ = w.Write([]byte("OK"))
 }
 
 // recovery returns a panic-safe handler that logs the panic and
