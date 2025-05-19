@@ -18,7 +18,7 @@ func main() {
 	logger, err := zap.NewProduction()
 
 	if err != nil {
-		panic("cannot create zap logger: " + err.Error())
+		panic("Cannot create zap logger: " + err.Error())
 	}
 
 	defer logger.Sync()
@@ -48,9 +48,9 @@ func main() {
 
 	// Run the server in a goroutine so it doesn’t block.
 	go func() {
-		sugar.Infof("proxy listening on port %d", appConfig.ServerConfig.Port)
+		sugar.Infof("Proxy listening on port %d", appConfig.ServerConfig.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			sugar.Fatalf("http server error: %v", err)
+			sugar.Fatalf("HTTP server error: %v", err)
 		}
 	}()
 
@@ -62,11 +62,11 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		sugar.Errorf("graceful shutdown failed: %v; forcing close", err)
+		sugar.Errorf("Graceful shutdown failed: %v; forcing close", err)
 		if cerr := srv.Close(); cerr != nil {
-			sugar.Errorf("server close error: %v", cerr)
+			sugar.Errorf("Server close error: %v", cerr)
 		}
 	}
 
-	sugar.Info("server stopped gracefully")
+	sugar.Info("Server stopped gracefully")
 }

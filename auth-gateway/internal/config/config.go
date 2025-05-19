@@ -9,7 +9,7 @@ type AppConfig struct {
 }
 
 type ServerConfig struct {
-	Port int `env:"PORT" envDefault:"8080"`
+	Port int `env:"PORT" envDefault:"9941"`
 }
 
 type HydraConfig struct {
