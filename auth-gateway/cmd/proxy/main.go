@@ -48,6 +48,7 @@ func main() {
 
 	// Run the server in a goroutine so it doesn’t block.
 	go func() {
+		sugar.Infof("proxy listening on port %d", appConfig.ServerConfig.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			sugar.Fatalf("http server error: %v", err)
 		}
