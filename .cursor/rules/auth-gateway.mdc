@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.go
+alwaysApply: false
+---
+[README.md](mdc:auth-gateway/README.md)
