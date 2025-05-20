@@ -32,10 +32,7 @@ func main() {
 		sugar.Fatalf("Failed to load config: %v", err)
 	}
 
-	clients, err := proxy.NewClients(appConfig)
-	if err != nil {
-		sugar.Fatalf("Failed to create clients: %v", err)
-	}
+	clients := proxy.NewClients(appConfig)
 
 	router := server.NewRouter(appConfig, clients)
 

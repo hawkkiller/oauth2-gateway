@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/handlers/auth"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/proxy"
 	"github.com/julienschmidt/httprouter"
 )
@@ -21,6 +22,8 @@ func NewRouter(appConfig *config.AppConfig, clients *proxy.Clients) *httprouter.
 
 	r.GET("/healthz", healthz)
 	r.GET("/readyz", readyz)
+
+	auth.NewHandler(clients.Hydra).RegisterRoutes(r)
 
 	return r
 }

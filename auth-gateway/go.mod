@@ -5,8 +5,6 @@ go 1.24.2
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/ory/hydra-client-go/v2 v2.2.1
-	github.com/ory/kratos-client-go v1.3.8
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
 	go.uber.org/zap v1.27.0
 )
@@ -20,5 +18,4 @@ require (
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
 )

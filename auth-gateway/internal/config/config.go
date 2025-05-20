@@ -1,6 +1,11 @@
 package config
 
-import "github.com/caarlos0/env/v11"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/caarlos0/env/v11"
+)
 
 type AppConfig struct {
 	ServerConfig ServerConfig `envPrefix:"SERVER_"`
@@ -25,5 +30,11 @@ func LoadConfig() (*AppConfig, error) {
 	if err := env.Parse(&config); err != nil {
 		return nil, err
 	}
+
+	// Ensure AdminURL has scheme
+	if !strings.HasPrefix(config.HydraConfig.AdminURL, "http") {
+		return nil, fmt.Errorf("AdminURL must have scheme, either http or https")
+	}
+
 	return &config, nil
 }
