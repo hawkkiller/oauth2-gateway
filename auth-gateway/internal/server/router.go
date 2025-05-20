@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/proxy"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -13,7 +14,7 @@ import (
 //   - CORS
 //   - health / readiness probes
 //   - Swagger UI at /swagger/
-func NewRouter(appConfig *config.AppConfig) *httprouter.Router {
+func NewRouter(appConfig *config.AppConfig, clients *proxy.Clients) *httprouter.Router {
 	r := httprouter.New()
 
 	r.PanicHandler = recovery()

@@ -13,11 +13,11 @@ type ServerConfig struct {
 }
 
 type HydraConfig struct {
-	URL string `env:"URL"`
+	AdminURL string `env:"ADMIN_URL"`
 }
 
 type KratosConfig struct {
-	URL string `env:"URL"`
+	PublicURL string `env:"PUBLIC_URL"`
 }
 
 func LoadConfig() (*AppConfig, error) {
