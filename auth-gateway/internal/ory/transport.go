@@ -1,4 +1,4 @@
-package proxy
+package ory
 
 import (
 	"crypto/tls"

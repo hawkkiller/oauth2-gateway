@@ -6,7 +6,7 @@ import (
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/handlers/auth"
-	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/proxy"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -15,7 +15,7 @@ import (
 //   - CORS
 //   - health / readiness probes
 //   - Swagger UI at /swagger/
-func NewRouter(appConfig *config.AppConfig, clients *proxy.Clients) *httprouter.Router {
+func NewRouter(appConfig *config.AppConfig, clients *ory.Clients) *httprouter.Router {
 	r := httprouter.New()
 
 	r.PanicHandler = recovery()
@@ -23,7 +23,7 @@ func NewRouter(appConfig *config.AppConfig, clients *proxy.Clients) *httprouter.
 	r.GET("/healthz", healthz)
 	r.GET("/readyz", readyz)
 
-	auth.NewHandler(clients.Hydra).RegisterRoutes(r)
+	auth.NewHandler(clients).RegisterRoutes(r)
 
 	return r
 }

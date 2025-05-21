@@ -1,16 +1,16 @@
 package auth
 
 import (
-	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/proxy"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/julienschmidt/httprouter"
 )
 
 type Handler struct {
-	hydra proxy.Hydra
+	ory *ory.Clients
 }
 
-func NewHandler(hydra proxy.Hydra) *Handler {
-	return &Handler{hydra: hydra}
+func NewHandler(clients *ory.Clients) *Handler {
+	return &Handler{ory: clients}
 }
 
 func (h *Handler) RegisterRoutes(r *httprouter.Router) {

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
-	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/proxy"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/server"
 	"go.uber.org/zap"
 )
@@ -32,8 +32,7 @@ func main() {
 		sugar.Fatalf("Failed to load config: %v", err)
 	}
 
-	clients := proxy.NewClients(appConfig)
-
+	clients := ory.NewClients(appConfig)
 	router := server.NewRouter(appConfig, clients)
 
 	srv := &http.Server{
