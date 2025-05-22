@@ -22,3 +22,19 @@ func (h *Handler) CreateLoginFlow(w http.ResponseWriter, r *http.Request, _ http
 
 	util.WriteJSON(w, http.StatusOK, flow)
 }
+
+// GetLoginFlow gets a login flow from Kratos
+func (h *Handler) GetLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	flow, outCookies, err := h.service.GetLoginFlow(r.Context(), r.URL.Query().Get("id"), r.Cookies())
+
+	if err != nil {
+		util.WriteError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, cookie := range outCookies {
+		http.SetCookie(w, cookie)
+	}
+
+	util.WriteJSON(w, http.StatusOK, flow)
+}
