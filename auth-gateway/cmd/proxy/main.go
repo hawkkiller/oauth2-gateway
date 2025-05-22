@@ -44,7 +44,7 @@ func main() {
 	}
 
 	authService := service.NewAuthServiceORY(clients)
-	router := server.NewRouter(appConfig, authService, sugar)
+	router := server.NewRouter(appConfig, authService, logger)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", appConfig.ServerConfig.Port),
