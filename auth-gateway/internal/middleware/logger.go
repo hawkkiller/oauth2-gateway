@@ -24,14 +24,10 @@ func GetLoggerFrom(ctx context.Context) *zap.Logger {
 // to the logger, records duration/size, and recovers panics.
 func LoggingMiddleware(base *zap.Logger) func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		// derive logger once
+		// derive logger with only trace_id
 		reqID := GetRequestID(r.Context())
 		l := base.With(
 			zap.String("trace_id", reqID),
-			zap.String("method", r.Method),
-			zap.String("path", r.URL.Path),
-			zap.String("remote_addr", r.RemoteAddr),
-			zap.String("user_agent", r.UserAgent()),
 		)
 
 		// stash in ctx so deeper code can do middleware.From(ctx)
@@ -50,7 +46,13 @@ func LoggingMiddleware(base *zap.Logger) func(rw http.ResponseWriter, r *http.Re
 			)
 		}()
 
-		l.Info("request started")
+		// Log method, path, remote_addr and user_agent only when request starts
+		l.Info("request started",
+			zap.String("method", r.Method),
+			zap.String("path", r.URL.Path),
+			zap.String("remote_addr", r.RemoteAddr),
+			zap.String("user_agent", r.UserAgent()),
+		)
 		next(ww, r)
 	}
 }

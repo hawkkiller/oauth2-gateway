@@ -65,9 +65,9 @@ func (s *authServiceOry) CreateLoginFlow(ctx context.Context, cookies []*http.Co
 }
 
 func (s *authServiceOry) GetLoginFlow(ctx context.Context, id string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
-	req := s.clients.KratosPublic.FrontendAPI.GetLoginFlow(ctx)
-	req.Cookie(util.ConcatCookies(cookies))
-	req.Id(id)
+	var req = s.clients.KratosPublic.FrontendAPI.GetLoginFlow(ctx)
+	req = req.Cookie(util.ConcatCookies(cookies))
+	req = req.Id(id)
 
 	flow, res, err := req.Execute()
 	if err != nil {

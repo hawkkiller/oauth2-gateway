@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,25 +14,26 @@ import (
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/server"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/service"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/util"
 	"go.uber.org/zap"
 )
 
 func main() {
-	logger, err := zap.NewProduction()
+	appConfig, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Failed to load config: " + err.Error())
+	}
+
+	logger, err := util.NewLogger(appConfig.DevMode)
 
 	if err != nil {
-		panic("Cannot create zap logger: " + err.Error())
+		log.Fatal("Cannot create zap logger: " + err.Error())
 	}
 
 	defer logger.Sync()
 	zap.ReplaceGlobals(logger)
 
 	sugar := logger.Sugar()
-
-	appConfig, err := config.LoadConfig()
-	if err != nil {
-		sugar.Fatalf("Failed to load config: %v", err)
-	}
 
 	clients, err := ory.NewClients(
 		appConfig.HydraConfig.AdminURL,

@@ -25,7 +25,15 @@ func (h *Handler) CreateLoginFlow(w http.ResponseWriter, r *http.Request, _ http
 
 // GetLoginFlow gets a login flow from Kratos
 func (h *Handler) GetLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	flow, outCookies, err := h.service.GetLoginFlow(r.Context(), r.URL.Query().Get("id"), r.Cookies())
+
+	id := r.URL.Query().Get("id")
+
+	if id == "" {
+		util.WriteError(w, http.StatusBadRequest, "id is required")
+		return
+	}
+
+	flow, outCookies, err := h.service.GetLoginFlow(r.Context(), id, r.Cookies())
 
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, err.Error())
