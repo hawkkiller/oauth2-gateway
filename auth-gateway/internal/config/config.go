@@ -1,13 +1,14 @@
 package config
 
 import (
-	"fmt"
-	"strings"
+	"os"
 
 	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
 
 type AppConfig struct {
+	DevMode      bool         `env:"DEV" envDefault:"false"`
 	ServerConfig ServerConfig `envPrefix:"SERVER_"`
 	HydraConfig  HydraConfig  `envPrefix:"HYDRA_"`
 	KratosConfig KratosConfig `envPrefix:"KRATOS_"`
@@ -18,7 +19,8 @@ type ServerConfig struct {
 }
 
 type HydraConfig struct {
-	AdminURL string `env:"ADMIN_URL"`
+	AdminURL  string `env:"ADMIN_URL"`
+	PublicURL string `env:"PUBLIC_URL"`
 }
 
 type KratosConfig struct {
@@ -27,13 +29,18 @@ type KratosConfig struct {
 
 func LoadConfig() (*AppConfig, error) {
 	var config AppConfig
-	if err := env.Parse(&config); err != nil {
-		return nil, err
+	config.DevMode = os.Getenv("DEV") == "true"
+
+	if config.DevMode {
+		err := godotenv.Load()
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// Ensure AdminURL has scheme
-	if !strings.HasPrefix(config.HydraConfig.AdminURL, "http") {
-		return nil, fmt.Errorf("AdminURL must have scheme, either http or https")
+	if err := env.Parse(&config); err != nil {
+		return nil, err
 	}
 
 	return &config, nil

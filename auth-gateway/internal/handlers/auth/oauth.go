@@ -8,9 +8,8 @@ import (
 
 // CreateOAuth2Flow creates a new OAuth2 login flow in Hydra
 func (h *Handler) CreateOAuth2Flow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	hydraConfig := h.ory.Hydra.GetConfig()
-	hydraURL := hydraConfig.URL
+	oauth2Url := h.service.GetOAuth2URL(r.URL.Query())
 
 	// Return Redirect to Hydra
-	http.Redirect(w, r, hydraURL+"/oauth2/auth?"+r.URL.Query().Encode(), http.StatusFound)
+	http.Redirect(w, r, oauth2Url, http.StatusFound)
 }

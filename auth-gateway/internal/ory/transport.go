@@ -6,20 +6,36 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
+	hydra "github.com/ory/hydra-client-go/v2"
+	kratos "github.com/ory/kratos-client-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Clients struct {
-	Hydra Hydra
+	HydraAdmin   *hydra.APIClient
+	HydraPublic  *hydra.APIClient
+	KratosPublic *kratos.APIClient
 }
 
-func NewClients(config *config.AppConfig) *Clients {
+func NewClients(hydraAdminURL string, hydraPublicURL string, kratosPublicURL string) (*Clients, error) {
 	client := defaultHTTPClient()
 
-	hydra := NewHydra(config.HydraConfig.AdminURL, client)
+	hydraAdmin, err := NewHydraAdmin(hydraAdminURL, client)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Clients{Hydra: hydra}
+	hydraPublic, err := NewHydraPublic(hydraPublicURL, client)
+	if err != nil {
+		return nil, err
+	}
+
+	kratosPublic, err := NewKratosPublic(kratosPublicURL, client)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Clients{HydraAdmin: hydraAdmin, HydraPublic: hydraPublic, KratosPublic: kratosPublic}, nil
 }
 
 func defaultHTTPClient() *http.Client {

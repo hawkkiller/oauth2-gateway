@@ -56,3 +56,13 @@ Structure of the project is as follows:
 3. Observability - `go.opentelemetry.io/otel`, `github.com/prometheus/client_golang/prometheus`, `go.uber.org/zap`
 4. Environment - `github.com/caarlos0/env/v10`
 5. Dev Quality of Life - `github.com/cosmtrek/air`
+
+## Development
+
+To run the application in development mode, run:
+
+```bash
+make dev
+```
+
+In this mode, the application will automatically detect ENV variables from .env file.

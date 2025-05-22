@@ -12,6 +12,7 @@ import (
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/server"
+	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -32,8 +33,18 @@ func main() {
 		sugar.Fatalf("Failed to load config: %v", err)
 	}
 
-	clients := ory.NewClients(appConfig)
-	router := server.NewRouter(appConfig, clients)
+	clients, err := ory.NewClients(
+		appConfig.HydraConfig.AdminURL,
+		appConfig.HydraConfig.PublicURL,
+		appConfig.KratosConfig.PublicURL,
+	)
+
+	if err != nil {
+		sugar.Fatalf("Failed to create clients: %v", err)
+	}
+
+	authService := service.NewAuthServiceORY(clients)
+	router := server.NewRouter(appConfig, authService)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", appConfig.ServerConfig.Port),

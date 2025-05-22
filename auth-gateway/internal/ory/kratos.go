@@ -1,23 +1,29 @@
 package ory
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"net/url"
 
-type KratosConfig struct {
-	KratosURL  string
-	HTTPClient *http.Client
-}
+	kratos "github.com/ory/kratos-client-go"
+)
 
-type Kratos interface {
-	GetConfig() *KratosConfig
-}
-
-func NewKratos(url string, httpClient *http.Client) Kratos {
-	return &KratosConfig{
-		KratosURL:  url,
-		HTTPClient: httpClient,
+func NewKratosPublic(URL string, httpClient *http.Client) (*kratos.APIClient, error) {
+	parsedURL, err := url.Parse(URL)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func (k *KratosConfig) GetConfig() *KratosConfig {
-	return k
+	if parsedURL.Scheme == "" {
+		return nil, fmt.Errorf("kratos URL must have scheme, either http or https")
+	}
+
+	cfg := kratos.NewConfiguration()
+	cfg.Scheme = parsedURL.Scheme
+	cfg.Host = parsedURL.Host
+	cfg.HTTPClient = httpClient
+
+	client := kratos.NewAPIClient(cfg)
+
+	return client, nil
 }
