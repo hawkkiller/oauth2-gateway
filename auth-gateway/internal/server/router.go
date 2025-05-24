@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/config"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/handlers/auth"
@@ -31,7 +32,6 @@ func NewRouter(appConfig *config.AppConfig, service service.AuthService, logger 
 	authHandler.RegisterRoutes(r)
 
 	n := negroni.New()
-	n.Use(negroni.HandlerFunc(middleware.RecoverMiddleware))
 	n.Use(negroni.HandlerFunc(middleware.RequestIDMiddleware))
 	n.Use(negroni.HandlerFunc(middleware.LoggingMiddleware(logger)))
 	n.UseHandler(r)
@@ -57,9 +57,10 @@ func readyz(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 // returns 500 without killing the process.
 func recovery() func(http.ResponseWriter, *http.Request, interface{}) {
 	return func(w http.ResponseWriter, r *http.Request, rec interface{}) {
-		log.Printf("panic: %v (%s %s)", rec, r.Method, r.URL.Path)
+		log.Printf("panic: %v (%s %s)\n%s", rec, r.Method, r.URL.Path, debug.Stack())
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusInternalServerError)
+
 		_, _ = w.Write([]byte("internal server error"))
 	}
 }
