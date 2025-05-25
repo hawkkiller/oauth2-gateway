@@ -17,5 +17,5 @@ func (h *Handler) RegisterRoutes(r *httprouter.Router) {
 	r.GET("/oauth2/auth", h.CreateOAuth2Flow)
 	r.GET("/login/browser", h.CreateLoginFlow)
 	r.GET("/login/flows", h.GetLoginFlow)
-	r.POST("/login/flows", h.UpdateLoginFlow)
+	r.POST("/login/flows/email", h.SendLoginEmailCode)
 }

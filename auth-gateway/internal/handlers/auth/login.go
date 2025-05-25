@@ -41,7 +41,7 @@ func (h *Handler) GetLoginFlow(w http.ResponseWriter, r *http.Request, _ httprou
 	response.WriteData(w, http.StatusOK, flow)
 }
 
-func (h *Handler) UpdateLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) SendLoginEmailCode(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	id := r.URL.Query().Get("id")
 
 	body, err := io.ReadAll(r.Body)
@@ -52,14 +52,14 @@ func (h *Handler) UpdateLoginFlow(w http.ResponseWriter, r *http.Request, _ http
 	}
 
 	r.Body.Close()
-	var form model.UpdateLoginFlowBody
+	var form model.SendLoginEmailCodeForm
 
 	if err := json.Unmarshal(body, &form); err != nil {
 		response.WriteError(w, err)
 		return
 	}
 
-	flow, outCookies, err := h.service.UpdateLoginFlow(r.Context(), id, r.Cookies(), &form)
+	flow, outCookies, err := h.service.SendLoginEmailCode(r.Context(), id, r.Cookies(), &form)
 
 	middleware.GetLoggerFrom(r.Context()).Debug("flow", zap.Any("flow", flow), zap.Any("err", err))
 

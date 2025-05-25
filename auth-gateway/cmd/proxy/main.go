@@ -61,7 +61,7 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	// Run the server in a goroutine so it doesn’t block.
+	// Run the server in a goroutine so it doesn't block.
 	go func() {
 		sugar.Infof("Proxy listening on port %d", appConfig.ServerConfig.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

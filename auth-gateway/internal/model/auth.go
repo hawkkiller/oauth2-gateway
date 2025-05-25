@@ -6,16 +6,9 @@ type LoginFlow struct {
 	Identifier string `json:"identifier,omitempty"`
 }
 
-type UpdateLoginFlowBody struct {
-	Code *UpdateLoginFlowWithCodeMethod `json:"code,omitempty"`
-}
-
-type UpdateLoginFlowWithCodeMethod struct {
-	ID         *string `json:"id"`
-	Identifier *string `json:"identifier,omitempty"`
-	Method     *string `json:"method"`
-	Code       *string `json:"code,omitempty"`
-	CsrfToken  string  `json:"csrf_token,omitempty"`
+type SendLoginEmailCodeForm struct {
+	Identifier string `json:"identifier"`
+	CsrfToken  string `json:"csrf_token"`
 }
 
 type UpdateLoginFlowResponse struct {

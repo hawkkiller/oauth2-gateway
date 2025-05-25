@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
-	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/middleware"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/model"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/response"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/util"
 	kratos "github.com/ory/kratos-client-go"
-	"go.uber.org/zap"
 )
 
 type authServiceOry struct {
@@ -140,58 +137,59 @@ func (s *authServiceOry) GetLoginFlow(ctx context.Context, id string, cookies []
 	}, res.Cookies(), nil
 }
 
-func (s *authServiceOry) UpdateLoginFlow(
+func (s *authServiceOry) SendLoginEmailCode(
 	ctx context.Context,
 	flowID string,
 	cookies []*http.Cookie,
-	form *model.UpdateLoginFlowBody,
-) (model.UpdateLoginFlowResponse, []*http.Cookie, error) {
-	logger := middleware.GetLoggerFrom(ctx)
+	form *model.SendLoginEmailCodeForm,
+) (model.LoginFlow, []*http.Cookie, error) {
+	var validationErrors map[string]string = make(map[string]string)
 
-	if flowID == "" {
-		logger.Debug("flowID is empty")
-		return model.UpdateLoginFlowResponse{}, nil, response.NewValidation(map[string]string{"id": "required"})
+	if form.Identifier == "" {
+		validationErrors["identifier"] = "required"
+	}
+
+	if form.CsrfToken == "" {
+		validationErrors["csrf_token"] = "required"
+	}
+
+	if len(validationErrors) > 0 {
+		return model.LoginFlow{}, nil, response.NewValidation(validationErrors)
 	}
 
 	var req = s.clients.KratosPublic.FrontendAPI.UpdateLoginFlow(ctx).
 		Cookie(util.ConcatCookies(cookies)).
 		Flow(flowID)
 
-	if form.Code != nil {
-		req = req.UpdateLoginFlowBody(kratos.UpdateLoginFlowBody{
-			UpdateLoginFlowWithCodeMethod: &kratos.UpdateLoginFlowWithCodeMethod{
-				Method:     "code",
-				Identifier: form.Code.Identifier,
-				Code:       form.Code.Code,
-				CsrfToken:  form.Code.CsrfToken,
-			},
-		})
+	req = req.UpdateLoginFlowBody(kratos.UpdateLoginFlowBody{
+		UpdateLoginFlowWithCodeMethod: &kratos.UpdateLoginFlowWithCodeMethod{
+			Method:     "code",
+			Identifier: &form.Identifier,
+			CsrfToken:  form.CsrfToken,
+		},
+	})
 
-		flow, res, err := req.Execute()
+	_, res, err := req.Execute()
 
-		if err != nil {
-			openApiErr, ok := ory.UnpackKratosGenericOpenApiError(err)
+	if err != nil {
+		openApiErr, ok := ory.UnpackKratosGenericOpenApiError(err)
 
-			if !ok {
-				return model.UpdateLoginFlowResponse{}, nil, err
-			}
-
-			// log type of openApiErr.Model()
-			logger.Debug("model", zap.Any("model", reflect.TypeOf(openApiErr.Model())))
-
-			if loginFlow, ok := openApiErr.Model().(kratos.LoginFlow); ok {
-				logger.Debug("loginFlow", zap.Any("loginFlow", loginFlow))
-			}
-
-			return model.UpdateLoginFlowResponse{}, nil, handleKratosOpenAPIError(openApiErr)
+		if !ok {
+			return model.LoginFlow{}, nil, err
 		}
 
-		return model.UpdateLoginFlowResponse{
-			Session: model.Session{
-				ID: flow.Session.Id,
-			},
-		}, res.Cookies(), nil
+		if loginFlow, ok := openApiErr.Model().(kratos.LoginFlow); ok {
+			if loginFlow.State == "sent_email" {
+				return model.LoginFlow{
+					ID:         loginFlow.Id,
+					CsrfToken:  findCsrfInNodes(loginFlow.Ui.GetNodes()),
+					Identifier: form.Identifier,
+				}, nil, nil
+			}
+
+			return model.LoginFlow{}, res.Cookies(), response.ErrNotFound
+		}
 	}
 
-	return model.UpdateLoginFlowResponse{}, nil, response.NewValidation(map[string]string{"method": "required"})
+	return model.LoginFlow{}, res.Cookies(), nil
 }
