@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-AUTH_URL="http://127.0.0.1:4444/oauth2/auth"
+AUTH_URL="http://127.0.0.1:9941/oauth2/auth"
 REDIRECT_URI="http://127.0.0.1:5555/callback" # Example redirect URI for gateway
 CLIENT_ID="19c0216a-0b1a-4486-96a2-37ebc44d0339"
 SCOPE="openid%20offline"

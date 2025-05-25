@@ -19,7 +19,12 @@ import (
 //   - CORS
 //   - health / readiness probes
 //   - Swagger UI at /swagger/
-func NewRouter(appConfig *config.AppConfig, service service.AuthService, logger *zap.Logger) http.Handler {
+func NewRouter(
+	appConfig *config.AppConfig,
+	idp service.IDPService,
+	oauth2 service.OAuth2Service,
+	logger *zap.Logger,
+) http.Handler {
 	r := httprouter.New()
 	r.PanicHandler = recovery()
 
@@ -28,7 +33,7 @@ func NewRouter(appConfig *config.AppConfig, service service.AuthService, logger 
 	r.GET("/readyz", readyz)
 
 	// Create auth handler
-	authHandler := auth.NewHandler(service)
+	authHandler := auth.NewHandler(idp, oauth2)
 	authHandler.RegisterRoutes(r)
 
 	n := negroni.New()

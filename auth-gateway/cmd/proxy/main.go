@@ -45,8 +45,10 @@ func main() {
 		sugar.Fatalf("Failed to create clients: %v", err)
 	}
 
-	authService := service.NewAuthServiceORY(clients)
-	router := server.NewRouter(appConfig, authService, logger)
+	authService := service.NewAuthServiceKratos(clients.KratosPublic)
+	oauth2Service := service.NewOAuth2ServiceHydra(clients.HydraPublic, clients.HydraAdmin)
+
+	router := server.NewRouter(appConfig, authService, oauth2Service, logger)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", appConfig.ServerConfig.Port),

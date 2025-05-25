@@ -35,6 +35,11 @@ var (
 		code:   "not_found",
 		msg:    "Resource not found",
 	}
+	ErrInvalidFlow = &err{
+		status: http.StatusUnprocessableEntity,
+		code:   "invalid_flow",
+		msg:    "Invalid flow",
+	}
 	ErrFlowExpired = &err{
 		status: http.StatusUnprocessableEntity,
 		code:   "flow_expired",

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/model"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/ory"
@@ -13,12 +12,12 @@ import (
 	kratos "github.com/ory/kratos-client-go"
 )
 
-type authServiceOry struct {
-	clients *ory.Clients
+type authServiceKratos struct {
+	kratosPublic *kratos.APIClient
 }
 
-func NewAuthServiceORY(clients *ory.Clients) AuthService {
-	return &authServiceOry{clients: clients}
+func NewAuthServiceKratos(client *kratos.APIClient) IDPService {
+	return &authServiceKratos{kratosPublic: client}
 }
 
 func findCsrfInNodes(nodes []kratos.UiNode) string {
@@ -84,15 +83,8 @@ func handleKratosOpenAPIError(openApiErr *kratos.GenericOpenAPIError) error {
 	return nil
 }
 
-func (s *authServiceOry) GetOAuth2URL(query url.Values) string {
-	cfg := s.clients.HydraPublic.GetConfig()
-
-	// concat scheme, host and /oauth2/auth
-	return fmt.Sprintf("%s://%s/oauth2/auth?%s", cfg.Scheme, cfg.Host, query.Encode())
-}
-
-func (s *authServiceOry) CreateLoginFlow(ctx context.Context, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
-	req := s.clients.KratosPublic.FrontendAPI.CreateBrowserLoginFlow(ctx)
+func (s *authServiceKratos) CreateLoginFlow(ctx context.Context, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
+	req := s.kratosPublic.FrontendAPI.CreateBrowserLoginFlow(ctx)
 	req.Cookie(util.ConcatCookies(cookies))
 
 	flow, res, err := req.Execute()
@@ -106,12 +98,12 @@ func (s *authServiceOry) CreateLoginFlow(ctx context.Context, cookies []*http.Co
 	return model.LoginFlow{ID: flow.Id, CsrfToken: csrfToken, Identifier: identifier}, res.Cookies(), nil
 }
 
-func (s *authServiceOry) GetLoginFlow(ctx context.Context, id string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
+func (s *authServiceKratos) GetLoginFlow(ctx context.Context, id string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
 	if id == "" {
 		return model.LoginFlow{}, nil, response.NewValidation(map[string]string{"id": "required"})
 	}
 
-	flow, res, err := s.clients.KratosPublic.FrontendAPI.
+	flow, res, err := s.kratosPublic.FrontendAPI.
 		GetLoginFlow(ctx).
 		Cookie(util.ConcatCookies(cookies)).
 		Id(id).
@@ -137,7 +129,7 @@ func (s *authServiceOry) GetLoginFlow(ctx context.Context, id string, cookies []
 	}, res.Cookies(), nil
 }
 
-func (s *authServiceOry) SendLoginEmailCode(
+func (s *authServiceKratos) SendLoginEmailCode(
 	ctx context.Context,
 	flowID string,
 	cookies []*http.Cookie,
@@ -157,19 +149,15 @@ func (s *authServiceOry) SendLoginEmailCode(
 		return model.LoginFlow{}, nil, response.NewValidation(validationErrors)
 	}
 
-	var req = s.clients.KratosPublic.FrontendAPI.UpdateLoginFlow(ctx).
+	_, res, err := s.kratosPublic.FrontendAPI.UpdateLoginFlow(ctx).
 		Cookie(util.ConcatCookies(cookies)).
-		Flow(flowID)
-
-	req = req.UpdateLoginFlowBody(kratos.UpdateLoginFlowBody{
+		Flow(flowID).UpdateLoginFlowBody(kratos.UpdateLoginFlowBody{
 		UpdateLoginFlowWithCodeMethod: &kratos.UpdateLoginFlowWithCodeMethod{
 			Method:     "code",
 			Identifier: &form.Identifier,
 			CsrfToken:  form.CsrfToken,
 		},
-	})
-
-	_, res, err := req.Execute()
+	}).Execute()
 
 	if err != nil {
 		openApiErr, ok := ory.UnpackKratosGenericOpenApiError(err)
@@ -192,4 +180,54 @@ func (s *authServiceOry) SendLoginEmailCode(
 	}
 
 	return model.LoginFlow{}, res.Cookies(), nil
+}
+
+func (s *authServiceKratos) SubmitLoginEmailCode(
+	ctx context.Context,
+	flowID string,
+	cookies []*http.Cookie,
+	form *model.SubmitLoginEmailCodeForm,
+) (model.SubmitLoginEmailCodeResponse, []*http.Cookie, error) {
+	var validationErrors map[string]string = make(map[string]string)
+
+	if form.Identifier == "" {
+		validationErrors["identifier"] = "required"
+	}
+
+	if form.Code == "" {
+		validationErrors["code"] = "required"
+	}
+
+	if form.CsrfToken == "" {
+		validationErrors["csrf_token"] = "required"
+	}
+
+	if len(validationErrors) > 0 {
+		return model.SubmitLoginEmailCodeResponse{}, nil, response.NewValidation(validationErrors)
+	}
+
+	login, res, err := s.kratosPublic.FrontendAPI.UpdateLoginFlow(ctx).
+		Cookie(util.ConcatCookies(cookies)).
+		Flow(flowID).UpdateLoginFlowBody(kratos.UpdateLoginFlowBody{
+		UpdateLoginFlowWithCodeMethod: &kratos.UpdateLoginFlowWithCodeMethod{
+			Method:     "code",
+			Code:       &form.Code,
+			Identifier: &form.Identifier,
+			CsrfToken:  form.CsrfToken,
+		},
+	}).Execute()
+
+	if err != nil {
+		openApiErr, ok := ory.UnpackKratosGenericOpenApiError(err)
+
+		if !ok {
+			return model.SubmitLoginEmailCodeResponse{}, nil, err
+		}
+
+		return model.SubmitLoginEmailCodeResponse{}, res.Cookies(), handleKratosOpenAPIError(openApiErr)
+	}
+
+	return model.SubmitLoginEmailCodeResponse{
+		Session: model.Session{ID: login.Session.Id},
+	}, res.Cookies(), nil
 }

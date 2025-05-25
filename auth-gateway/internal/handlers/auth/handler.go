@@ -6,11 +6,12 @@ import (
 )
 
 type Handler struct {
-	service service.AuthService
+	idp    service.IDPService
+	oauth2 service.OAuth2Service
 }
 
-func NewHandler(service service.AuthService) *Handler {
-	return &Handler{service: service}
+func NewHandler(idp service.IDPService, oauth2 service.OAuth2Service) *Handler {
+	return &Handler{idp: idp, oauth2: oauth2}
 }
 
 func (h *Handler) RegisterRoutes(r *httprouter.Router) {
@@ -18,4 +19,5 @@ func (h *Handler) RegisterRoutes(r *httprouter.Router) {
 	r.GET("/login/browser", h.CreateLoginFlow)
 	r.GET("/login/flows", h.GetLoginFlow)
 	r.POST("/login/flows/email", h.SendLoginEmailCode)
+	r.POST("/login/flows/email/submit", h.SubmitLoginEmailCode)
 }
