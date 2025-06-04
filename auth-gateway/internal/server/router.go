@@ -39,6 +39,7 @@ func NewRouter(
 	n := negroni.New()
 	n.Use(negroni.HandlerFunc(middleware.RequestIDMiddleware))
 	n.Use(negroni.HandlerFunc(middleware.LoggingMiddleware(logger)))
+	n.Use(negroni.HandlerFunc(middleware.CorsMiddleware))
 	n.UseHandler(r)
 
 	return n

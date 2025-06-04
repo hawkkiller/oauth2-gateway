@@ -83,9 +83,14 @@ func handleKratosOpenAPIError(openApiErr *kratos.GenericOpenAPIError) error {
 	return nil
 }
 
-func (s *authServiceKratos) CreateLoginFlow(ctx context.Context, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
+func (s *authServiceKratos) CreateLoginFlow(ctx context.Context, challenge string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error) {
+	if challenge == "" {
+		return model.LoginFlow{}, nil, response.NewValidation(map[string]string{"challenge": "required"})
+	}
+
 	req := s.kratosPublic.FrontendAPI.CreateBrowserLoginFlow(ctx)
 	req.Cookie(util.ConcatCookies(cookies))
+	req.LoginChallenge(challenge)
 
 	flow, res, err := req.Execute()
 	if err != nil {

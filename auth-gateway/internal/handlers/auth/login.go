@@ -15,7 +15,9 @@ import (
 
 // CreateLoginFlow creates a new login flow in Kratos
 func (h *Handler) CreateLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	flow, outCookies, err := h.idp.CreateLoginFlow(r.Context(), r.Cookies())
+	loginChallenge := r.URL.Query().Get("challenge")
+
+	flow, outCookies, err := h.idp.CreateLoginFlow(r.Context(), loginChallenge, r.Cookies())
 
 	if err != nil {
 		response.WriteError(w, err)

@@ -9,7 +9,7 @@ import (
 )
 
 type IDPService interface {
-	CreateLoginFlow(ctx context.Context, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error)
+	CreateLoginFlow(ctx context.Context, challenge string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error)
 	GetLoginFlow(ctx context.Context, flowID string, cookies []*http.Cookie) (model.LoginFlow, []*http.Cookie, error)
 	SendLoginEmailCode(ctx context.Context, flowID string, cookies []*http.Cookie, form *model.SendLoginEmailCodeForm) (model.LoginFlow, []*http.Cookie, error)
 	SubmitLoginEmailCode(ctx context.Context, flowID string, cookies []*http.Cookie, form *model.SubmitLoginEmailCodeForm) (model.SubmitLoginEmailCodeResponse, []*http.Cookie, error)
