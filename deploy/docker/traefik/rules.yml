@@ -1,6 +1,5 @@
 http:
   routers:
-    # ───── Go API ──────────────────────────────────────────────
     api:
       rule: "Host(`auth.learny.local`) && PathPrefix(`/api`)"
       entryPoints: ["web"]
@@ -8,29 +7,27 @@ http:
       middlewares:
         - api-strip-prefix
 
-    # ───── Auth (if needed as separate frontend) ──────────────
+    hydra:
+      rule: "Host(`auth.learny.local`) && PathPrefix(`/hydra`)"
+      entryPoints: ["web"]
+      service: "hydra"
+      middlewares:
+        - hydra-strip-prefix
+
     auth:
       rule: "Host(`auth.learny.local`)"
       entryPoints: ["web"]
       service: "auth"
-
-    # ───── ORY Hydra (public) ─────────────────────────────────
-    hydra:
-      rule: "Host(`hydra.learny.local`)"
-      entryPoints: ["web"]
-      service: "hydra"
-
-    # ───── ORY Kratos (if needed) ─────────────────────────────
-    kratos:
-      rule: "Host(`kratos.learny.local`)"
-      entryPoints: ["web"]
-      service: "kratos"
 
   middlewares:
     api-strip-prefix:
       stripPrefix:
         prefixes:
           - /api
+    hydra-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - /hydra
 
   services:
     # target ports must match your docker-compose service definitions

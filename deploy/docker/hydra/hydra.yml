@@ -4,11 +4,12 @@ serve:
 
 urls:
   self:
-    issuer: http://127.0.0.1:4444
-  consent: http://127.0.0.1:5555/consent
-  login: http://127.0.0.1:5555/login
-  logout: http://127.0.0.1:5555/logout
-  registration: http://127.0.0.1:5555/signup
+    issuer: http://auth.learny.local/hydra
+  consent: http://auth.learny.local/consent
+  login: http://auth.learny.local/login
+  logout: http://auth.learny.local/logout
+  registration: http://auth.learny.local/signup
+  # error: http://auth.learny.local/error
 
 secrets:
   system:

@@ -11,7 +11,14 @@ class HttpClient {
     url: string,
     options: RequestInit = {}
   ): Promise<BackendResponse<T>> {
-    const response = await fetch(`${this.baseUrl}${url}`, {
+    // join baseUrl and url, but if url starts with /, remove it
+    const fullUrl = this.baseUrl.endsWith("/")
+      ? this.baseUrl + url.slice(1)
+      : this.baseUrl + url;
+
+    console.log(fullUrl);
+
+    const response = await fetch(fullUrl, {
       headers: {
         "Content-Type": "application/json",
         ...(options.headers ?? {}),

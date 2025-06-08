@@ -1,21 +1,23 @@
-FROM node:18-alpine
-
+FROM node:24-alpine AS development-dependencies-env
+COPY . /app
 WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies (including dev dependencies for build)
 RUN npm install
 
-# Copy source code
-COPY . .
+FROM node:24-alpine AS production-dependencies-env
+COPY package*.json /app/
+WORKDIR /app
+RUN npm install --omit=dev
 
-# Build the application
-RUN npm run build
+FROM node:24-alpine AS build-env
+COPY . /app/
+COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+WORKDIR /app
+RUN npm run build -- -m production
 
-# Expose port
-EXPOSE 3000
+FROM node:24-alpine
+COPY package*.json /app/
+COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=build-env /app/build /app/build
+WORKDIR /app
 
-# Start the application
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]

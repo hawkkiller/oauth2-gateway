@@ -23,16 +23,13 @@ services:
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
       - LOG_LEVEL=info
-      - SERVE_PUBLIC_BASE_URL=http://127.0.0.1:4433/
-      - SERVE_ADMIN_BASE_URL=http://kratos:4434/
+      - SERVE_PUBLIC_BASE_URL=http://kratos.learny.local
+      - SERVE_ADMIN_BASE_URL=http://kratos.learny.local
       - COURIER_SMTP_CONNECTION_URI=${KRATOS_SMTP_CONNECTION_URI}
       - COURIER_SMTP_FROM_ADDRESS=${KRATOS_SMTP_FROM_ADDRESS}
     volumes:
       - kratos-data:/var/lib/sqlite
       - ./kratos:/etc/config/kratos:ro
-    ports:
-      - 4433:4433 # public
-      - 4434:4434 # admin
     networks:
       - intranet
     healthcheck:
@@ -61,10 +58,6 @@ services:
 
   hydra:
     image: oryd/hydra:v2.3.0
-    ports:
-      - "4444:4444" # Public port
-      - "4445:4445" # Admin port
-      # - "5555:5555" # Port for hydra token user
     command: serve -c /etc/config/hydra/hydra.yml all --dev
     volumes:
       - hydra-data:/mnt/sqlite:rw

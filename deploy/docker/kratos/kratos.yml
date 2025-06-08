@@ -69,15 +69,11 @@ courier:
     local_name: learny
 
 cookies:
-  domain: 127.0.0.1
-  path: /
   same_site: Lax
 
 session:
   cookie:
     name: ory_kratos_session
-    domain: 127.0.0.1
     persistent: true
-    path: /
     same_site: Lax
   lifespan: "24h"

@@ -34,7 +34,7 @@ func NewHydraPublic(publicUrl string, httpClient *http.Client) (*hydra.APIClient
 
 	cfg := hydra.NewConfiguration()
 	cfg.Scheme = parsedPublicURL.Scheme
-	cfg.Host = parsedPublicURL.Host
+	cfg.Host = parsedPublicURL.Host + parsedPublicURL.Path
 	cfg.HTTPClient = httpClient
 
 	return hydra.NewAPIClient(cfg), nil

@@ -10,7 +10,7 @@ services:
       - KRATOS_PUBLIC_URL=http://kratos:4433
       - KRATOS_ADMIN_URL=http://kratos:4434
       - HYDRA_ADMIN_URL=http://hydra:4445
-      - HYDRA_PUBLIC_URL=http://hydra:4444
+      - HYDRA_PUBLIC_URL=http://auth.learny.local/hydra
 
   auth-gateway-ui:
     build:
@@ -20,4 +20,4 @@ services:
       - intranet
     restart: "no"
     environment:
-      - VITE_GATEWAY_URL=http://auth-gateway:9941
+      - VITE_GATEWAY_URL=http://auth.learny.local/api
