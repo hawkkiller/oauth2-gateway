@@ -14,7 +14,7 @@ services:
 
   auth-gateway-ui:
     build:
-      context: ../../auth-ui
+      context: ../../auth-gateway-ui
       dockerfile: deploy/Dockerfile
     networks:
       - intranet

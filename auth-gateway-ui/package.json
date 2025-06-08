@@ -1,5 +1,5 @@
 {
-  "name": "auth-ui",
+  "name": "auth-gateway-ui",
   "private": true,
   "type": "module",
   "scripts": {
