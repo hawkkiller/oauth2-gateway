@@ -5,10 +5,10 @@ serve:
 urls:
   self:
     issuer: http://auth.learny.local/hydra
-  consent: http://auth.learny.local/consent
-  login: http://auth.learny.local/login
-  logout: http://auth.learny.local/logout
-  registration: http://auth.learny.local/signup
+  consent: http://localhost:5555/consent
+  login: http://localhost:5555/login
+  logout: http://localhost:5555/logout
+  registration: http://localhost:5555/signup
   # error: http://auth.learny.local/error
 
 secrets:

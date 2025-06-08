@@ -8,5 +8,13 @@ export default defineConfig({
   server: {
     port: 5555,
     host: true,
-  }
+    proxy: {
+      "/api": {
+        target: "http://auth.learny.local",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      },
+    },
+  },
 });

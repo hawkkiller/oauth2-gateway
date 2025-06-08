@@ -61,7 +61,7 @@ services:
     command: serve -c /etc/config/hydra/hydra.yml all --dev
     volumes:
       - hydra-data:/mnt/sqlite:rw
-      - ./hydra:/etc/config/hydra:ro
+      - ./hydra/dev:/etc/config/hydra:ro
     environment:
       - DSN=sqlite:///mnt/sqlite/db.sqlite?_fk=true&mode=rwc
     restart: unless-stopped
