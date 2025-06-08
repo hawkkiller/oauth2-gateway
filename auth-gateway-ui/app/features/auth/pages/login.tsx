@@ -1,15 +1,14 @@
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import {
-  Box,
   Button,
-  Card,
   Flex,
   Separator,
   Text,
-  TextField,
+  TextField
 } from "@radix-ui/themes";
 import React from "react";
-import { useNavigate, useNavigation, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { LoginCard } from "../components/loginCard";
 import { useLoginFlow } from "../hooks/useLoginFlow";
 import { useSendLoginCode } from "../hooks/useSendLoginCode";
 
@@ -20,7 +19,7 @@ export function meta() {
   ];
 }
 
-export default function Login() {
+export default function LoginPage() {
   return (
     <Flex justify="center" align="center" height="100%" width="100%">
       <LoginCard>
@@ -53,7 +52,7 @@ function LoginFormFlow() {
 
   React.useEffect(() => {
     if (loginCode.flow) {
-      navigate(`/login/verify?flow=${loginCode.flow.id}`);
+      navigate(`/login/verify-code?flow=${loginCode.flow.id}`);
     }
   }, [loginCode.flow]);
 
@@ -103,17 +102,5 @@ function LoginFormFlow() {
         Sign Up
       </Button>
     </Flex>
-  );
-}
-
-function LoginCard({ children }: { children: React.ReactNode }) {
-  return (
-    <Box width="100%" maxWidth="400px" asChild>
-      <Card size="3">
-        <Flex direction="column" gap="4">
-          {children}
-        </Flex>
-      </Card>
-    </Box>
   );
 }
