@@ -4,17 +4,15 @@ import {
   Button,
   Card,
   Flex,
-  Grid,
   Separator,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import type { Route } from "../+types/root";
 import React from "react";
 import { useSearchParams } from "react-router";
-import * as authService from "./auth-service";
+import * as authService from "../service/auth-service";
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Login" },
     { name: "description", content: "Login to your account" },
@@ -22,18 +20,18 @@ export function meta({}: Route.MetaArgs) {
 }
 
 function useSendLoginCode(): {
-  sendLoginCode: (email: string) => Promise<void>;
+  sendLoginCode: (email: string, flow: LoginFlow) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 } {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const sendLoginCode = async (email: string) => {
+  const sendLoginCode = async (email: string, flow: LoginFlow) => {
     setIsLoading(true);
     setError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await authService.sendLoginCode(email, flow);
 
     setIsLoading(false);
     setError("Invalid email");
@@ -118,11 +116,17 @@ function LoginFormFlow() {
   }, [loginFlow.flow]);
 
   if (loginFlow.isLoading) {
-    return <div>Loading...</div>;
+    return <Text>Loading...</Text>;
   }
 
   if (loginFlow.error) {
-    return <div>{loginFlow.error}</div>;
+    return <Text>{loginFlow.error}</Text>;
+  }
+
+  const flow = loginFlow.flow;
+
+  if (!flow) {
+    return <Text>No login flow</Text>;
   }
 
   return (
@@ -143,7 +147,7 @@ function LoginFormFlow() {
 
       <Button
         size="2"
-        onClick={() => loginCode.sendLoginCode(email)}
+        onClick={() => loginCode.sendLoginCode(email, flow)}
         loading={loginCode.isLoading}
       >
         Login with Code

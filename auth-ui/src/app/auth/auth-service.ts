@@ -1,5 +1,5 @@
-import { env } from "../common/env";
-import { HttpClient } from "../common/http-client";
+import { env } from "@shared/env";
+import { HttpClient } from "@shared/http-client";
 
 const kratosClient = new HttpClient(env.gatewayUrl);
 

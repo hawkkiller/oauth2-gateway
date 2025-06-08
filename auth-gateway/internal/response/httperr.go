@@ -45,6 +45,11 @@ var (
 		code:   "flow_expired",
 		msg:    "Flow expired",
 	}
+	ErrInternal = &err{
+		status: http.StatusInternalServerError,
+		code:   "internal_error",
+		msg:    "Internal server error",
+	}
 )
 
 // Helper for ad-hoc validation errors.
