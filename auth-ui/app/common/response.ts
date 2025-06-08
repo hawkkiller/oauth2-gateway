@@ -1,7 +1,7 @@
 export type BackendResponse<T> = {
   ok: boolean;
   data: T;
-  error: string | null;
+  error: BackendError | null;
 };
 
 export type BackendError = {

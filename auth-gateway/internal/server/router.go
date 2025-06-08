@@ -10,6 +10,7 @@ import (
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/middleware"
 	"github.com/hawkkiller/oauth2-gateway/auth-gateway/internal/service"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 	"github.com/urfave/negroni/v3"
 	"go.uber.org/zap"
 )
@@ -39,7 +40,12 @@ func NewRouter(
 	n := negroni.New()
 	n.Use(negroni.HandlerFunc(middleware.RequestIDMiddleware))
 	n.Use(negroni.HandlerFunc(middleware.LoggingMiddleware(logger)))
-	n.Use(negroni.HandlerFunc(middleware.CorsMiddleware))
+	n.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://127.0.0.1:5555"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	}))
 	n.UseHandler(r)
 
 	return n

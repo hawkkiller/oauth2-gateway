@@ -78,7 +78,7 @@ function useLoginFlow(): {
         setLoginFlow(loginFlow);
       }
     } catch (error) {
-      setError("Failed to load login flow: " + error);
+      setError("Error loading login flow: " + error);
     } finally {
       setIsLoading(false);
     }

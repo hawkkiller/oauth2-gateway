@@ -14,9 +14,10 @@ class HttpClient {
     const response = await fetch(`${this.baseUrl}${url}`, {
       headers: {
         "Content-Type": "application/json",
-        ...options.headers,
+        ...(options.headers ?? {}),
       },
       ...options,
+      credentials: options.credentials ?? "include",
     });
 
     const data = await response.json();

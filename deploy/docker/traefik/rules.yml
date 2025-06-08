@@ -1,65 +1,59 @@
-# traefik/rules.yml
-
 http:
   routers:
-    oathkeeper:
-      rule: "Host(`oathkeeper.localhost`)"
-      entryPoints:
-        - web
-      service: oathkeeper
+    # ───── Go API ──────────────────────────────────────────────
+    api:
+      rule: "Host(`auth.learny.local`) && PathPrefix(`/api`)"
+      entryPoints: ["web"]
+      service: "api"
+      middlewares:
+        - api-strip-prefix
 
+    # ───── Auth (if needed as separate frontend) ──────────────
+    auth:
+      rule: "Host(`auth.learny.local`)"
+      entryPoints: ["web"]
+      service: "auth"
+
+    # ───── ORY Hydra (public) ─────────────────────────────────
+    hydra:
+      rule: "Host(`hydra.learny.local`)"
+      entryPoints: ["web"]
+      service: "hydra"
+
+    # ───── ORY Kratos (if needed) ─────────────────────────────
     kratos:
-      rule: "Host(`kratos.localhost`)"
-      entryPoints:
-        - web
-      service: kratos
+      rule: "Host(`kratos.learny.local`)"
+      entryPoints: ["web"]
+      service: "kratos"
 
-    echo:
-      rule: "Host(`echo.localhost`)"
-      entryPoints:
-        - web
-      middlewares:
-        - oathkeeper-auth
-      service: echo
-    
-    bff:
-      rule: "Host(`bff.localhost`)"
-      entryPoints:
-        - web
-      middlewares:
-        - oathkeeper-auth
-      service: bff
-    
-    ui:
-      rule: "Host(`ui.localhost`)"
-      entryPoints:
-        - web
-      service: ui
+  middlewares:
+    api-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - /api
 
   services:
+    # target ports must match your docker-compose service definitions
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://auth-gateway:9941"
+        passHostHeader: true
+
+    auth:
+      loadBalancer:
+        servers:
+          - url: "http://auth-gateway-ui:3000"
+        passHostHeader: true
+
+    hydra:
+      loadBalancer:
+        servers:
+          - url: "http://hydra:4444"
+        passHostHeader: true
+
     kratos:
       loadBalancer:
         servers:
           - url: "http://kratos:4433"
-    oathkeeper:
-      loadBalancer:
-        servers:
-          - url: "http://oathkeeper:4456"
-    echo:
-      loadBalancer:
-        servers:
-          - url: "http://echo:8080"
-    
-    ui:
-      loadBalancer:
-        servers:
-          - url: "http://kratos-selfservice-ui-node:3000"
-
-  middlewares:
-    oathkeeper-auth:
-      forwardAuth:
-        address: "http://oathkeeper:4456/decisions"
-        authResponseHeaders:
-          - "Authorization"
-        authRequestHeaders:
-          - "Authorization"
+        passHostHeader: true

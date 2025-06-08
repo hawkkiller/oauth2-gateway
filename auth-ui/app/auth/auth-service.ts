@@ -14,5 +14,9 @@ export async function createLoginFlow(challenge: string): Promise<LoginFlow> {
 export async function getLoginFlow(flowId: string): Promise<LoginFlow> {
   const response = await kratosClient.get<LoginFlow>(`/login/flows?id=${flowId}`);
 
+  if (!response.ok) {
+    throw new Error(response.error?.message);
+  }
+
   return response.data;
 }
