@@ -26,8 +26,8 @@ export async function getLoginFlow(flowId: string): Promise<LoginFlow> {
 export async function sendLoginCode(
   email: string,
   flow: LoginFlow
-): Promise<void> {
-  const response = await kratosClient.post<void>(
+): Promise<LoginFlow> {
+  const response = await kratosClient.post<LoginFlow>(
     `/login/flows/email?id=${flow.id}`,
     {
       identifier: email,

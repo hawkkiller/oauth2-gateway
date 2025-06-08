@@ -9,80 +9,15 @@ import {
   TextField,
 } from "@radix-ui/themes";
 import React from "react";
-import { useSearchParams } from "react-router";
-import * as authService from "../service/auth-service";
+import { useNavigate, useNavigation, useSearchParams } from "react-router";
+import { useLoginFlow } from "../hooks/useLoginFlow";
+import { useSendLoginCode } from "../hooks/useSendLoginCode";
 
 export function meta() {
   return [
     { title: "Login" },
     { name: "description", content: "Login to your account" },
   ];
-}
-
-function useSendLoginCode(): {
-  sendLoginCode: (email: string, flow: LoginFlow) => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
-} {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  const sendLoginCode = async (email: string, flow: LoginFlow) => {
-    setIsLoading(true);
-    setError(null);
-
-    await authService.sendLoginCode(email, flow);
-
-    setIsLoading(false);
-    setError("Invalid email");
-  };
-
-  return { sendLoginCode, isLoading, error };
-}
-
-function useLoginFlow(): {
-  loadLoginFlow: (
-    flowId: string | null,
-    challenge: string | null
-  ) => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
-  flow: LoginFlow | null;
-} {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [flow, setLoginFlow] = React.useState<LoginFlow | null>(null);
-
-  const loadLoginFlow = async (
-    flowId: string | null,
-    challenge: string | null
-  ) => {
-    if (!flowId && !challenge) {
-      setError("Invalid flow or challenge");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      if (challenge) {
-        const loginFlow = await authService.createLoginFlow(challenge);
-        setLoginFlow(loginFlow);
-      }
-
-      if (flowId) {
-        const loginFlow = await authService.getLoginFlow(flowId);
-        setLoginFlow(loginFlow);
-      }
-    } catch (error) {
-      setError("Error loading login flow: " + error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { loadLoginFlow, isLoading, error, flow };
 }
 
 export default function Login() {
@@ -100,6 +35,7 @@ function LoginFormFlow() {
   const [searchParams] = useSearchParams();
   const loginChallenge = searchParams.get("login_challenge");
   const flowId = searchParams.get("flow");
+  const navigate = useNavigate();
 
   const loginFlow = useLoginFlow();
   const loginCode = useSendLoginCode();
@@ -107,13 +43,19 @@ function LoginFormFlow() {
 
   React.useEffect(() => {
     loginFlow.loadLoginFlow(flowId, loginChallenge);
-  }, [loginChallenge, flowId]);
+  }, []);
 
   React.useEffect(() => {
     if (loginFlow.flow) {
-      window.history.replaceState({}, "", `/login?flow=${loginFlow.flow.id}`);
+      navigate(`/login?flow=${loginFlow.flow.id}`);
     }
   }, [loginFlow.flow]);
+
+  React.useEffect(() => {
+    if (loginCode.flow) {
+      navigate(`/login/verify?flow=${loginCode.flow.id}`);
+    }
+  }, [loginCode.flow]);
 
   if (loginFlow.isLoading) {
     return <Text>Loading...</Text>;
