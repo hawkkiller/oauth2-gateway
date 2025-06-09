@@ -10,6 +10,7 @@ import {
 import { Box, Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import type { Route } from "./+types/root";
+import "./app.css";
 
 export const links: Route.LinksFunction = () => [];
 

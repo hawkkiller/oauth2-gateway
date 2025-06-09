@@ -1,13 +1,9 @@
-import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
-import {
-  Button,
-  Flex,
-  Separator,
-  Text,
-  TextField
-} from "@radix-ui/themes";
+import { Flex, Separator, Text } from "@radix-ui/themes";
+import { Loader2Icon } from "lucide-react";
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { LoginCard } from "../components/loginCard";
 import { useLoginFlow } from "../hooks/useLoginFlow";
 import { useSendLoginCode } from "../hooks/useSendLoginCode";
@@ -22,7 +18,10 @@ export function meta() {
 export default function LoginPage() {
   return (
     <Flex justify="center" align="center" height="100%" width="100%">
-      <LoginCard>
+      <LoginCard
+        title="Sign in"
+        description="Enter your email to sign in. We'll send you a code to verify your account."
+      >
         <LoginFormFlow />
       </LoginCard>
     </Flex>
@@ -72,25 +71,19 @@ function LoginFormFlow() {
 
   return (
     <Flex direction="column" gap="4">
-      <Text weight="bold" size="4" align="center">
-        Sign in
-      </Text>
-      <TextField.Root
+      <Input
         placeholder="Email"
-        size="3"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       >
-        <TextField.Slot>
-          <EnvelopeClosedIcon />
-        </TextField.Slot>
-      </TextField.Root>
+        Hello
+      </Input>
 
       <Button
-        size="2"
         onClick={() => loginCode.sendLoginCode(email, flow)}
-        loading={loginCode.isLoading}
+        disabled={loginCode.isLoading}
       >
+        {loginCode.isLoading && <Loader2Icon className="animate-spin" />}
         Login with Code
       </Button>
 
@@ -98,9 +91,7 @@ function LoginFormFlow() {
         <Separator size="3" />
       </Flex>
 
-      <Button size="2" variant="soft">
-        Sign Up
-      </Button>
+      <Button variant="link">Sign Up</Button>
     </Flex>
   );
 }

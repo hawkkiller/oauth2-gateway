@@ -1,13 +1,25 @@
-import { Box, Card, Flex } from "@radix-ui/themes";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 
-export function LoginCard({ children }: { children: React.ReactNode }) {
+export function LoginCard({
+  children,
+  title,
+  description,
+}: {
+  children: React.ReactNode;
+  title: string;
+  description?: string;
+}) {
   return (
-    <Box width="100%" maxWidth="400px" asChild>
-      <Card size="3">
-        <Flex direction="column" gap="4">
-          {children}
-        </Flex>
+    <div className="w-full max-w-[400px]">
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col">{children}</div>
+        </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

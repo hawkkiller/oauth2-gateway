@@ -15,7 +15,7 @@ export function meta() {
 export default function VerifyCodePage() {
   return (
     <Flex justify="center" align="center" height="100%" width="100%">
-      <LoginCard>
+      <LoginCard title="Verify Code">
         <VerifyCodeForm />
       </LoginCard>
     </Flex>
@@ -48,10 +48,6 @@ export function VerifyCodeForm() {
 
   return (
     <Flex direction="column" gap="4">
-      <Text weight="bold" size="4" align="center">
-        Verify Code
-      </Text>
-
       <Flex direction="column" gap="1">
         <TextField.Root
           placeholder="Enter code"
